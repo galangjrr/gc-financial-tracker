@@ -1,0 +1,18 @@
+project_id = "gc-financial-tracker"
+
+[api]
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public"]
+
+[db]
+port = 54322
+shadow_port = 54323
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://*.vercel.app"]
+token_lifespan = 3600
+
+[storage]
+enabled = true
