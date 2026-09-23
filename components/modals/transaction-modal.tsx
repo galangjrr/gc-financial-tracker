@@ -17,27 +17,21 @@ import {
 import { api, Wallet, Category } from "@/lib/api";
 import {
   Calendar,
-  Layers,
   Wallet as WalletIcon,
   ArrowRightLeft,
   FileText,
   Send,
-  X,
   Check,
   ParkingCircle,
   Loader2,
+  ChevronDown,
+  Sparkles,
 } from "lucide-react";
 
-const TX_TABS = [
-  "Pengeluaran",
-  "Pemasukan",
-  "Tabungan",
-  "Liabilitas",
-  "Tagihan",
-  "Transfer",
-] as const;
+const PRIMARY_TABS = ["Pengeluaran", "Pemasukan", "Transfer"] as const;
+const EXTRA_TABS = ["Tabungan", "Liabilitas", "Tagihan"] as const;
 
-type TxTabType = (typeof TX_TABS)[number];
+const QUICK_AMOUNTS = [10000, 20000, 50000, 100000];
 
 interface TransactionModalProps {
   open: boolean;
@@ -50,13 +44,13 @@ export function TransactionModal({ open, setOpen }: TransactionModalProps) {
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[520px] max-h-[92vh] overflow-y-auto rounded-[32px] p-6 border border-hairline bg-canvas">
+        <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto rounded-[32px] p-6 border border-hairline bg-canvas">
           <DialogHeader className="flex flex-row items-center justify-between pb-2 border-b border-hairline">
-            <DialogTitle className="font-semibold text-[18px] text-ink">
-              Transaksi Baru
+            <DialogTitle className="font-bold text-[18px] text-ink">
+              Catat Transaksi Cepat
             </DialogTitle>
           </DialogHeader>
-          <TransactionContent onSuccess={() => setOpen(false)} />
+          <FastTransactionForm onSuccess={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
     );
@@ -64,22 +58,24 @@ export function TransactionModal({ open, setOpen }: TransactionModalProps) {
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerContent className="bg-canvas border-hairline max-h-[94vh] flex flex-col">
-        <DrawerHeader className="px-6 pt-4 pb-2 text-left border-b border-hairline flex items-center justify-between">
-          <DrawerTitle className="font-semibold text-[18px] text-ink">
-            Transaksi Baru
+      <DrawerContent className="bg-canvas border-hairline max-h-[92vh] flex flex-col">
+        <DrawerHeader className="px-6 pt-3 pb-2 text-left border-b border-hairline">
+          <div className="mx-auto w-10 h-1.5 rounded-full bg-hairline mb-2" />
+          <DrawerTitle className="font-bold text-[17px] text-ink">
+            Catat Transaksi Cepat
           </DrawerTitle>
         </DrawerHeader>
-        <div className="flex-1 overflow-y-auto p-4 pb-[max(env(safe-area-inset-bottom,0px),24px)]">
-          <TransactionContent onSuccess={() => setOpen(false)} />
+        <div className="flex-1 overflow-y-auto px-4 pt-2 pb-[max(env(safe-area-inset-bottom,0px),20px)]">
+          <FastTransactionForm onSuccess={() => setOpen(false)} />
         </div>
       </DrawerContent>
     </Drawer>
   );
 }
 
-function TransactionContent({ onSuccess }: { onSuccess: () => void }) {
-  const [activeTab, setActiveTab] = useState<TxTabType>("Pengeluaran");
+function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
+  const [activeTab, setActiveTab] = useState<string>("Pengeluaran");
+  const [showMoreTabs, setShowMoreTabs] = useState(false);
   const [displayAmount, setDisplayAmount] = useState("");
   const [rawAmount, setRawAmount] = useState(0);
   const [txDate, setTxDate] = useState(() => new Date().toISOString().split("T")[0]);
@@ -88,12 +84,11 @@ function TransactionContent({ onSuccess }: { onSuccess: () => void }) {
   const [walletDestId, setWalletDestId] = useState("");
   const [notes, setNotes] = useState("");
   
-  // Biaya parkir (opsional)
+  // Biaya parkir opsional
   const [hasParking, setHasParking] = useState(false);
-  const [displayParking, setDisplayParking] = useState("2.000");
-  const [rawParking, setRawParking] = useState(2000);
+  const [parkingAmount, setParkingAmount] = useState(2000);
 
-  // Data dropdown
+  // Dropdown data
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [categoriesBySegment, setCategoriesBySegment] = useState<Record<string, Category[]>>({});
   const [loading, setLoading] = useState(false);
@@ -153,16 +148,9 @@ function TransactionContent({ onSuccess }: { onSuccess: () => void }) {
     setDisplayAmount(num.toLocaleString("id-ID"));
   };
 
-  const handleParkingChange = (val: string) => {
-    const clean = val.replace(/\D/g, "");
-    if (!clean) {
-      setDisplayParking("");
-      setRawParking(0);
-      return;
-    }
-    const num = parseInt(clean, 10);
-    setRawParking(num);
-    setDisplayParking(num.toLocaleString("id-ID"));
+  const handleQuickAmount = (val: number) => {
+    setRawAmount(val);
+    setDisplayAmount(val.toLocaleString("id-ID"));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -202,7 +190,6 @@ function TransactionContent({ onSuccess }: { onSuccess: () => void }) {
           notes: notes.trim(),
         });
       } else {
-        // Transaksi utama
         await api.createTransaction({
           tx_date: txDate,
           type: activeTab,
@@ -212,8 +199,8 @@ function TransactionContent({ onSuccess }: { onSuccess: () => void }) {
           notes: notes.trim(),
         });
 
-        // Jika ada biaya parkir terpisah pada pengeluaran
-        if (activeTab === "Pengeluaran" && hasParking && rawParking > 0) {
+        // Catat parkir otomatis jika dicentang
+        if (activeTab === "Pengeluaran" && hasParking && parkingAmount > 0) {
           const parkirCat = (categoriesBySegment["Pengeluaran"] || []).find((c) =>
             c.category_name.toLowerCase().includes("parkir")
           );
@@ -221,19 +208,19 @@ function TransactionContent({ onSuccess }: { onSuccess: () => void }) {
             tx_date: txDate,
             type: "Pengeluaran",
             category_id: parkirCat?.id,
-            amount: rawParking,
+            amount: parkingAmount,
             wallet_source_id: walletSourceId,
-            notes: notes ? `Parkir (${notes})` : "Biaya Parkir",
+            notes: notes ? `Parkir: ${notes}` : "Biaya Parkir",
           });
         }
       }
 
-      setSuccessMsg("Transaksi berhasil dicatat");
+      setSuccessMsg("Tersimpan!");
       window.dispatchEvent(new CustomEvent("refresh-data"));
 
       setTimeout(() => {
         onSuccess();
-      }, 400);
+      }, 350);
     } catch (err: any) {
       setErrorMsg(err.message || "Gagal menyimpan transaksi");
     } finally {
@@ -242,37 +229,76 @@ function TransactionContent({ onSuccess }: { onSuccess: () => void }) {
   };
 
   const currentCategories = categoriesBySegment[activeTab] || [];
+  const isExtraTabActive = EXTRA_TABS.includes(activeTab as any);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-      {/* Tab Pilihan Segment */}
-      <div className="grid grid-cols-3 gap-2">
-        {TX_TABS.map((tab) => {
+    <form onSubmit={handleSubmit} className="space-y-3 pt-1">
+      {/* 1. Tipe Transaksi Ringkas: 3 Tab Utama + Tab Lainnya */}
+      <div className="flex items-center gap-1.5 p-1 bg-surface-card rounded-[18px] border border-hairline">
+        {PRIMARY_TABS.map((tab) => {
           const isActive = activeTab === tab;
           return (
             <button
               key={tab}
               type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`py-2.5 rounded-[16px] text-xs font-semibold transition-all border ${
+              onClick={() => {
+                setActiveTab(tab);
+                setShowMoreTabs(false);
+              }}
+              className={`flex-1 py-2 rounded-[14px] text-xs font-bold transition-all ${
                 isActive
-                  ? "bg-ink text-canvas border-ink shadow-sm"
-                  : "bg-surface-card text-body hover:bg-secondary-bg border-hairline"
+                  ? "bg-ink text-canvas shadow-sm"
+                  : "text-mute hover:text-ink hover:bg-secondary-bg/50"
               }`}
             >
               {tab}
             </button>
           );
         })}
+        <button
+          type="button"
+          onClick={() => setShowMoreTabs(!showMoreTabs)}
+          className={`px-3 py-2 rounded-[14px] text-xs font-bold transition-all flex items-center gap-1 ${
+            isExtraTabActive
+              ? "bg-ink text-canvas shadow-sm"
+              : "text-mute hover:text-ink hover:bg-secondary-bg/50"
+          }`}
+        >
+          <span>{isExtraTabActive ? activeTab : "Lainnya"}</span>
+          <ChevronDown className="w-3.5 h-3.5" />
+        </button>
       </div>
 
-      {/* Box Nominal Besar */}
-      <div className="bg-surface-card p-5 rounded-[20px] border border-hairline text-center flex flex-col items-center">
-        <p className="text-[11px] text-mute font-semibold uppercase tracking-wider mb-2">
-          MAU CATAT BERAPA?
-        </p>
-        <div className="flex items-center justify-center gap-2 w-full max-w-xs">
-          <span className="text-brand-emerald text-2xl font-bold">Rp</span>
+      {/* Sub menu untuk tipe Tabungan, Liabilitas, Tagihan */}
+      {showMoreTabs && (
+        <div className="flex gap-1.5 p-1.5 bg-secondary-bg/50 rounded-[14px] border border-hairline animate-in fade-in duration-150">
+          {EXTRA_TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => {
+                setActiveTab(tab);
+                setShowMoreTabs(false);
+              }}
+              className={`flex-1 py-1.5 rounded-[10px] text-xs font-semibold transition-all ${
+                activeTab === tab
+                  ? "bg-ink text-canvas shadow-sm"
+                  : "text-body hover:bg-canvas"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* 2. Hero Input Nominal + Chip Nominal Cepat */}
+      <div className="bg-surface-card p-4 rounded-[22px] border border-hairline text-center flex flex-col items-center">
+        <span className="text-[10px] text-mute font-bold uppercase tracking-wider mb-1">
+          Nominal
+        </span>
+        <div className="flex items-center justify-center gap-1.5 w-full">
+          <span className="text-brand-emerald text-xl md:text-2xl font-black">Rp</span>
           <input
             type="text"
             inputMode="numeric"
@@ -280,89 +306,70 @@ function TransactionContent({ onSuccess }: { onSuccess: () => void }) {
             onChange={(e) => handleAmountChange(e.target.value)}
             placeholder="0"
             autoFocus
-            className="bg-transparent text-ink text-3xl md:text-4xl font-extrabold w-full text-center focus:outline-none placeholder:text-ash border-none"
+            className="bg-transparent text-ink text-3xl md:text-4xl font-black w-full text-center focus:outline-none placeholder:text-ash border-none p-0"
           />
         </div>
-      </div>
 
-      {/* Row: Kapan (Tanggal) */}
-      <div className="bg-surface-card p-3.5 rounded-[16px] border border-hairline flex items-center gap-3">
-        <div className="w-10 h-10 rounded-[12px] bg-secondary-bg flex items-center justify-center text-body border border-hairline shrink-0">
-          <Calendar className="w-5 h-5" />
-        </div>
-        <div className="flex-1">
-          <label className="block text-[11px] text-mute font-medium">Kapan?</label>
-          <input
-            type="date"
-            value={txDate}
-            onChange={(e) => setTxDate(e.target.value)}
-            className="w-full bg-transparent text-ink text-sm font-semibold focus:outline-none border-none p-0 cursor-pointer"
-          />
-        </div>
-      </div>
-
-      {/* Row: Buat Apa (Kategori) — Sembunyikan jika Transfer */}
-      {activeTab !== "Transfer" && (
-        <div className="bg-surface-card p-3.5 rounded-[16px] border border-hairline flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[12px] bg-secondary-bg flex items-center justify-center text-body border border-hairline shrink-0">
-            <Layers className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <label className="block text-[11px] text-mute font-medium">Buat Apa?</label>
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full bg-transparent text-ink text-sm font-semibold focus:outline-none appearance-none cursor-pointer border-none p-0"
+        {/* Shortcut Chip Nominal Cepat */}
+        <div className="flex gap-1.5 mt-3 w-full justify-center">
+          {QUICK_AMOUNTS.map((amt) => (
+            <button
+              key={amt}
+              type="button"
+              onClick={() => handleQuickAmount(amt)}
+              className="px-2.5 py-1 bg-canvas hover:bg-secondary-bg border border-hairline rounded-full text-[11px] font-bold text-ink transition-transform active:scale-95"
             >
-              {currentCategories.length === 0 ? (
-                <option value="">Tidak ada kategori</option>
-              ) : (
-                currentCategories.map((c) => (
-                  <option key={c.id} value={c.id} className="bg-canvas text-ink">
-                    {c.category_name}
-                  </option>
-                ))
-              )}
-            </select>
+              +{amt >= 1000 ? `${amt / 1000}rb` : amt}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 3. Kategori Chip 1 Ketukan (Anti Dropdown Wheel) */}
+      {activeTab !== "Transfer" && currentCategories.length > 0 && (
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center px-1">
+            <span className="text-[11px] text-mute font-bold uppercase tracking-wider">
+              Pilih Kategori
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pb-1 scrollbar-hide">
+            {currentCategories.map((c) => {
+              const isSelected = categoryId === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setCategoryId(c.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                    isSelected
+                      ? "bg-ink text-canvas border-ink shadow-sm scale-[1.02]"
+                      : "bg-surface-card text-body hover:bg-secondary-bg border-hairline"
+                  }`}
+                >
+                  {c.category_name}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* Row: Pakai Uang Mana (Dompet Sumber) */}
-      <div className="bg-surface-card p-3.5 rounded-[16px] border border-hairline flex items-center gap-3">
-        <div className="w-10 h-10 rounded-[12px] bg-secondary-bg flex items-center justify-center text-body border border-hairline shrink-0">
-          <WalletIcon className="w-5 h-5" />
-        </div>
-        <div className="flex-1">
-          <label className="block text-[11px] text-mute font-medium">
-            {activeTab === "Transfer" ? "Dari Dompet Mana?" : "Pakai Uang Mana?"}
-          </label>
-          <select
-            value={walletSourceId}
-            onChange={(e) => setWalletSourceId(e.target.value)}
-            className="w-full bg-transparent text-ink text-sm font-semibold focus:outline-none appearance-none cursor-pointer border-none p-0"
-          >
-            {wallets.map((w) => (
-              <option key={w.id} value={w.id} className="bg-canvas text-ink">
-                {w.wallet_name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Row: Ke Dompet Mana (Khusus Transfer) */}
-      {activeTab === "Transfer" && (
-        <div className="bg-surface-card p-3.5 rounded-[16px] border border-hairline flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[12px] bg-secondary-bg flex items-center justify-center text-body border border-hairline shrink-0">
-            <ArrowRightLeft className="w-5 h-5" />
+      {/* 4. Baris Sejajar: Dompet Sumber + Tanggal (Hemat Tempat) */}
+      <div className="grid grid-cols-2 gap-2">
+        {/* Dompet Sumber */}
+        <div className="bg-surface-card p-2.5 rounded-[16px] border border-hairline flex items-center gap-2">
+          <div className="w-7 h-7 rounded-[10px] bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
+            <WalletIcon className="w-3.5 h-3.5 text-ink" />
           </div>
-          <div className="flex-1">
-            <label className="block text-[11px] text-mute font-medium">Ke Dompet Mana?</label>
+          <div className="flex-1 min-w-0">
+            <span className="block text-[10px] text-mute font-bold leading-none mb-1">
+              {activeTab === "Transfer" ? "Dari" : "Dompet"}
+            </span>
             <select
-              value={walletDestId}
-              onChange={(e) => setWalletDestId(e.target.value)}
-              className="w-full bg-transparent text-ink text-sm font-semibold focus:outline-none appearance-none cursor-pointer border-none p-0"
+              value={walletSourceId}
+              onChange={(e) => setWalletSourceId(e.target.value)}
+              className="w-full bg-transparent text-ink text-xs font-bold focus:outline-none appearance-none cursor-pointer border-none p-0 truncate"
             >
               {wallets.map((w) => (
                 <option key={w.id} value={w.id} className="bg-canvas text-ink">
@@ -372,60 +379,81 @@ function TransactionContent({ onSuccess }: { onSuccess: () => void }) {
             </select>
           </div>
         </div>
-      )}
 
-      {/* Row: Catatan Kecil */}
-      <div className="bg-surface-card p-3.5 rounded-[16px] border border-hairline flex items-center gap-3">
-        <div className="w-10 h-10 rounded-[12px] bg-secondary-bg flex items-center justify-center text-body border border-hairline shrink-0">
-          <FileText className="w-5 h-5" />
-        </div>
-        <div className="flex-1">
-          <label className="block text-[11px] text-mute font-medium">Catatan Kecil</label>
+        {/* Tanggal atau Dompet Tujuan jika Transfer */}
+        {activeTab === "Transfer" ? (
+          <div className="bg-surface-card p-2.5 rounded-[16px] border border-hairline flex items-center gap-2">
+            <div className="w-7 h-7 rounded-[10px] bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
+              <ArrowRightLeft className="w-3.5 h-3.5 text-ink" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="block text-[10px] text-mute font-bold leading-none mb-1">
+                Ke
+              </span>
+              <select
+                value={walletDestId}
+                onChange={(e) => setWalletDestId(e.target.value)}
+                className="w-full bg-transparent text-ink text-xs font-bold focus:outline-none appearance-none cursor-pointer border-none p-0 truncate"
+              >
+                {wallets.map((w) => (
+                  <option key={w.id} value={w.id} className="bg-canvas text-ink">
+                    {w.wallet_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-surface-card p-2.5 rounded-[16px] border border-hairline flex items-center gap-2">
+            <div className="w-7 h-7 rounded-[10px] bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
+              <Calendar className="w-3.5 h-3.5 text-ink" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="block text-[10px] text-mute font-bold leading-none mb-1">
+                Tanggal
+              </span>
+              <input
+                type="date"
+                value={txDate}
+                onChange={(e) => setTxDate(e.target.value)}
+                className="w-full bg-transparent text-ink text-xs font-bold focus:outline-none border-none p-0 cursor-pointer"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 5. Catatan Kecil + Opsi Cepat Parkir Sejajar */}
+      <div className="flex items-center gap-2">
+        <div className="flex-1 bg-surface-card px-3 py-2 rounded-[14px] border border-hairline flex items-center gap-2">
+          <FileText className="w-3.5 h-3.5 text-mute shrink-0" />
           <input
             type="text"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Kasih keterangan dikit..."
-            className="w-full bg-transparent text-ink text-sm font-semibold focus:outline-none placeholder:text-ash border-none p-0"
+            placeholder="Catatan kecil (opsional)..."
+            className="w-full bg-transparent text-ink text-xs font-medium focus:outline-none placeholder:text-ash border-none p-0"
           />
         </div>
+
+        {/* Tombol Cepat Parkir 2rb khusus Pengeluaran */}
+        {activeTab === "Pengeluaran" && (
+          <button
+            type="button"
+            onClick={() => setHasParking(!hasParking)}
+            className={`px-3 py-2 rounded-[14px] text-xs font-bold transition-all border flex items-center gap-1.5 shrink-0 ${
+              hasParking
+                ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                : "bg-surface-card text-mute hover:text-ink border-hairline"
+            }`}
+          >
+            <ParkingCircle className="w-3.5 h-3.5" />
+            <span>+2rb</span>
+          </button>
+        )}
       </div>
 
-      {/* Row: Biaya Parkir (Khusus Pengeluaran) */}
-      {activeTab === "Pengeluaran" && (
-        <div className="bg-surface-card p-3.5 rounded-[16px] border border-hairline">
-          <label className="flex items-center gap-3 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={hasParking}
-              onChange={(e) => setHasParking(e.target.checked)}
-              className="w-4 h-4 rounded border-hairline text-primary focus:ring-primary accent-[#e60023]"
-            />
-            <span className="text-sm font-semibold text-ink">Ada biaya parkir?</span>
-          </label>
-
-          {hasParking && (
-            <div className="mt-3 pt-3 border-t border-hairline flex items-center gap-3">
-              <div className="w-8 h-8 rounded-[8px] bg-secondary-bg flex items-center justify-center text-body border border-hairline shrink-0">
-                <ParkingCircle className="w-4 h-4" />
-              </div>
-              <div className="flex-1 flex items-center gap-2">
-                <span className="text-brand-emerald text-sm font-bold">Rp</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={displayParking}
-                  onChange={(e) => handleParkingChange(e.target.value)}
-                  placeholder="2.000"
-                  className="bg-transparent text-ink text-base font-bold focus:outline-none border-none p-0 w-full"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Pesan Error & Sukses */}
+      {/* Pesan Status */}
       {errorMsg && (
         <p className="text-xs text-error font-semibold text-center">{errorMsg}</p>
       )}
@@ -435,11 +463,11 @@ function TransactionContent({ onSuccess }: { onSuccess: () => void }) {
         </p>
       )}
 
-      {/* Tombol Simpan */}
+      {/* 6. Tombol Eksekusi Merah Selalu Kelihatan Tanpa Scroll */}
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-[#e60023] hover:bg-[#cc001f] active:scale-[0.98] text-white font-bold h-12 rounded-[16px] transition-all flex items-center justify-center gap-2 text-sm shadow-[0_4px_16px_rgba(230,0,35,0.25)]"
+        className="w-full bg-[#e60023] hover:bg-[#cc001f] active:scale-[0.98] text-white font-bold h-11 rounded-[16px] transition-all flex items-center justify-center gap-2 text-sm shadow-[0_4px_16px_rgba(230,0,35,0.25)]"
       >
         {loading ? (
           <>
@@ -447,7 +475,7 @@ function TransactionContent({ onSuccess }: { onSuccess: () => void }) {
           </>
         ) : (
           <>
-            Sip, Catat Sekarang <Send className="w-4 h-4" />
+            Sip, Catat Sekarang <Send className="w-3.5 h-3.5" />
           </>
         )}
       </button>
