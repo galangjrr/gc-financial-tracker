@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { CheckCircle2, ShieldCheck, Zap } from "lucide-react";

@@ -1,37 +1,61 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { PageShell } from "@/components/shared/page-shell";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { OnboardingModal } from "@/components/modals/onboarding-modal";
 import { FinancialTrendChart } from "@/components/shared/financial-trend-chart";
+import { api, DashboardSummary } from "@/lib/api";
+import { formatRupiah } from "@/lib/utils";
 import {
-  Wallet,
+  Wallet as WalletIcon,
   TrendingUp,
   TrendingDown,
   ArrowRight,
   LayoutDashboard,
+  CreditCard,
 } from "lucide-react";
 
-// Simulated view state — swap to test each state
 type ViewState = "ready" | "loading" | "empty" | "error";
 
 export default function DashboardPage() {
-  const [viewState] = useState<ViewState>("ready");
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [viewState, setViewState] = useState<ViewState>("loading");
+  const [data, setData] = useState<DashboardSummary | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    loadDashboard();
+
+    const handleRefresh = () => {
+      loadDashboard();
+    };
+    window.addEventListener("refresh-data", handleRefresh);
+    return () => window.removeEventListener("refresh-data", handleRefresh);
+  }, []);
+
+  const loadDashboard = async () => {
+    try {
+      setViewState("loading");
+      const summary = await api.getDashboard();
+      setData(summary);
+      if (summary.wallets.length === 0 && summary.recent_transactions.length === 0) {
+        setViewState("empty");
+      } else {
+        setViewState("ready");
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || "Gagal memuat ringkasan keuangan");
+      setViewState("error");
+    }
+  };
 
   return (
     <PageShell
-      title="Dashboard"
-      subtitle="Ringkasan keuangan bulan ini"
+      title="Beranda"
+      subtitle={data?.month_label ? `Ringkasan kondisi keuangan keluarga ${data.month_label}` : "Ringkasan kondisi keuangan keluarga"}
     >
-      {/* Modals */}
-      <OnboardingModal open={onboardingOpen} setOpen={setOnboardingOpen} />
-
-      {/* View States */}
       {viewState === "loading" && <DashboardSkeleton />}
 
       {viewState === "empty" && (
@@ -40,172 +64,214 @@ export default function DashboardPage() {
           title="Belum Ada Data Keuangan"
           description="Mulai catat transaksi pertamamu untuk melihat ringkasan keuangan di sini."
           actionLabel="Tambah Transaksi Pertama"
-          onAction={() => {}}
+          onAction={() => {
+            window.dispatchEvent(new CustomEvent("open-tx-modal"));
+          }}
         />
       )}
 
       {viewState === "error" && (
         <ErrorState
           title="Gagal Memuat Dashboard"
-          message="Koneksi ke server terputus. Pastikan kamu terhubung ke internet lalu coba lagi."
-          onRetry={() => window.location.reload()}
+          message={errorMessage || "Koneksi ke backend Golang terputus. Pastikan server backend sedang berjalan."}
+          onRetry={loadDashboard}
         />
       )}
 
-      {viewState === "ready" && (
-        <>
-          {/* Net Worth Card */}
-          <section className="bg-canvas text-ink rounded-[32px] p-8 md:p-10 relative overflow-hidden border border-hairline">
-            <div className="relative z-10">
-              <p className="text-mute text-[14px] font-semibold mb-2 tracking-wide uppercase">
-                Total Kekayaan Keluarga
+      {viewState === "ready" && data && (
+        <div className="space-y-6">
+          {/* 4 KPI Summary Cards sesuai UI Klasik GC Finance */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {/* Total Kekayaan */}
+            <div className="bg-surface-card p-4 rounded-[16px] border border-hairline transition-all hover:-translate-y-0.5 hover:shadow-sm">
+              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+                TOTAL KEKAYAAN
               </p>
-              <h2 className="text-[44px] md:text-[56px] font-bold tracking-[-0.8px] leading-none">
-                Rp 48.250.000
-              </h2>
+              <h3 className="text-xl md:text-2xl font-bold text-ink truncate">
+                {formatRupiah(data.net_worth)}
+              </h3>
             </div>
-            <div className="absolute right-0 bottom-0 opacity-5 translate-x-1/4 translate-y-1/4 pointer-events-none">
-              <Wallet className="w-64 h-64 text-ink" />
+
+            {/* Pemasukan Bulan Ini */}
+            <div className="bg-surface-card p-4 rounded-[16px] border border-emerald-500/60 transition-all hover:-translate-y-0.5 hover:shadow-sm">
+              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+                UANG MASUK BULAN INI
+              </p>
+              <h3 className="text-xl md:text-2xl font-bold text-emerald-600 truncate">
+                {formatRupiah(data.total_income)}
+              </h3>
             </div>
-          </section>
-          
+
+            {/* Pengeluaran Bulan Ini */}
+            <div className="bg-surface-card p-4 rounded-[16px] border border-rose-500/60 transition-all hover:-translate-y-0.5 hover:shadow-sm">
+              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+                UANG KELUAR BULAN INI
+              </p>
+              <h3 className="text-xl md:text-2xl font-bold text-rose-600 truncate">
+                {formatRupiah(data.total_expense)}
+              </h3>
+            </div>
+
+            {/* Rasio Nabung */}
+            <div className="bg-surface-card p-4 rounded-[16px] border border-hairline transition-all hover:-translate-y-0.5 hover:shadow-sm">
+              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+                PORSI NABUNG
+              </p>
+              <h3 className="text-xl md:text-2xl font-bold text-ink mb-1">
+                {Math.round(data.savings_ratio)}%
+              </h3>
+              <div className="w-full bg-secondary-bg rounded-full h-1.5 mt-2 border border-hairline overflow-hidden">
+                <div
+                  className="bg-[#e60023] h-1.5 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(Math.max(data.savings_ratio, 0), 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Trend Chart */}
-          <section>
+          <section className="bg-surface-card rounded-[24px] p-6 border border-hairline">
+            <div className="mb-4">
+              <h3 className="text-base font-bold text-ink">Performa Bulanan</h3>
+              <p className="text-xs text-mute">Pemasukan vs Pengeluaran</p>
+            </div>
             <FinancialTrendChart />
           </section>
 
-          {/* Wallets */}
+          {/* Dompet & Rekening */}
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-ink text-[22px]">
+              <h3 className="font-bold text-ink text-[18px]">
                 Dompet &amp; Rekening
               </h3>
-              <Link href="/wallets" className="h-10 flex items-center justify-center rounded-md bg-secondary-bg px-4 text-[14px] font-bold text-ink hover:bg-[#c8c8c1] transition-colors gap-1">
-                Lihat Semua <ArrowRight className="w-4 h-4" />
+              <Link
+                href="/wallets"
+                className="h-9 flex items-center justify-center rounded-full bg-secondary-bg px-4 text-xs font-bold text-ink hover:bg-hairline transition-colors gap-1"
+              >
+                Lihat Semua <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { name: "BCA Rekening Utama", amount: "Rp 32.100.000" },
-                { name: "Mandiri Tabungan", amount: "Rp 15.000.000" },
-                { name: "Cash / Tunai", amount: "Rp 1.150.000" },
-              ].map((w) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              {data.wallets.map((w) => (
                 <div
-                  key={w.name}
-                  className="bg-canvas border border-hairline rounded-[16px] p-6"
+                  key={w.id}
+                  className="bg-surface-card border border-hairline rounded-[16px] p-4 flex flex-col justify-between"
                 >
-                  <p className="text-mute text-[14px] font-semibold mb-2">
-                    {w.name}
-                  </p>
-                  <p className="text-[22px] font-bold text-ink leading-[1.25]">
-                    {w.amount}
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-7 h-7 rounded-full bg-secondary-bg flex items-center justify-center shrink-0">
+                      {w.wallet_name.toLowerCase().includes("cash") ? (
+                        <WalletIcon className="w-3.5 h-3.5 text-ink" />
+                      ) : (
+                        <CreditCard className="w-3.5 h-3.5 text-ink" />
+                      )}
+                    </div>
+                    <span className="text-xs font-semibold text-mute truncate">
+                      {w.wallet_name}
+                    </span>
+                  </div>
+                  <p
+                    className={`text-[15px] font-bold truncate ${
+                      w.current_balance < 0 ? "text-rose-600" : "text-ink"
+                    }`}
+                  >
+                    {formatRupiah(w.current_balance)}
                   </p>
                 </div>
               ))}
             </div>
           </section>
 
+          {/* Grid: Alokasi & Transaksi Terakhir */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Budget Progress */}
-            <section className="bg-canvas border border-hairline rounded-[32px] p-8">
-              <h3 className="font-semibold text-ink text-[22px] mb-8">
-                Budget Bulan Ini
+            {/* Alokasi Pengeluaran */}
+            <section className="bg-surface-card border border-hairline rounded-[24px] p-6">
+              <h3 className="font-bold text-ink text-[18px] mb-4">
+                Alokasi Pengeluaran Bulan Ini
               </h3>
-              <div className="space-y-8">
-                {[
-                  {
-                    label: "Pengeluaran Harian",
-                    pct: 68,
-                    color: "bg-financial-expense",
-                    sisa: "Rp 1.500.000",
-                    total: "Rp 4.500.000",
-                  },
-                  {
-                    label: "Tagihan & Cicilan",
-                    pct: 90,
-                    color: "bg-financial-bill",
-                    sisa: "Rp 200.000",
-                    total: "Rp 2.000.000",
-                  },
-                ].map((b) => (
-                  <div key={b.label}>
-                    <div className="flex justify-between text-[16px] mb-3 font-semibold">
-                      <span className="text-ink">{b.label}</span>
-                      <span className="text-ink">{b.pct}%</span>
-                    </div>
-                    <div className="w-full bg-secondary-bg rounded-full h-3">
-                      <div
-                        className={`${b.color} h-3 rounded-full transition-all duration-500`}
-                        style={{ width: `${b.pct}%` }}
-                      />
-                    </div>
-                    <p className="text-[14px] text-mute mt-3 font-medium">
-                      Sisa {b.sisa} dari {b.total}
-                    </p>
-                  </div>
-                ))}
+              <div className="space-y-4">
+                {Object.entries(data.category_spend).length === 0 ? (
+                  <p className="text-mute text-xs">Belum ada pengeluaran di bulan ini.</p>
+                ) : (
+                  Object.entries(data.category_spend).slice(0, 6).map(([category, amount]) => {
+                    const pct = data.total_expense > 0 ? Math.round((amount / data.total_expense) * 100) : 0;
+                    return (
+                      <div key={category}>
+                        <div className="flex justify-between text-xs mb-1.5 font-semibold">
+                          <span className="text-ink">{category}</span>
+                          <span className="text-mute">{pct}% ({formatRupiah(amount)})</span>
+                        </div>
+                        <div className="w-full bg-secondary-bg rounded-full h-2">
+                          <div
+                            className="bg-[#e60023] h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min(pct, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </section>
 
-            {/* Recent Transactions */}
-            <section className="bg-canvas border border-hairline rounded-[32px] p-8">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="font-semibold text-ink text-[22px]">
-                  Transaksi Terakhir
-                </h3>
-                <Link href="/transactions" className="h-10 flex items-center justify-center rounded-md bg-secondary-bg px-4 text-[14px] font-bold text-ink hover:bg-[#c8c8c1] transition-colors">
-                  Detail
-                </Link>
-              </div>
-              <div className="space-y-4">
-                {[
-                  {
-                    icon: TrendingDown,
-                    iconBg: "bg-financial-expense/10",
-                    iconColor: "text-financial-expense",
-                    name: "Makan Siang Kopi",
-                    meta: "Hari ini, 12:45 • Cash",
-                    amount: "-Rp 45.000",
-                    amountColor: "text-ink",
-                  },
-                  {
-                    icon: TrendingUp,
-                    iconBg: "bg-financial-income/10",
-                    iconColor: "text-financial-income",
-                    name: "Gaji Bulanan",
-                    meta: "Kemarin, 09:00 • BCA",
-                    amount: "+Rp 12.000.000",
-                    amountColor: "text-financial-income",
-                  },
-                ].map((tx) => (
-                  <div
-                    key={tx.name}
-                    className="flex items-center justify-between p-4 bg-surface-card rounded-[16px]"
+            {/* Catatan Terakhir */}
+            <section className="bg-surface-card border border-hairline rounded-[24px] p-6 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-ink text-[18px]">
+                    Catatan Terakhir
+                  </h3>
+                  <Link
+                    href="/transactions"
+                    className="text-xs font-bold text-ink hover:text-[#e60023] transition-colors"
                   >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`w-10 h-10 rounded-full ${tx.iconBg} flex items-center justify-center shrink-0`}
-                      >
-                        <tx.icon className={`w-5 h-5 ${tx.iconColor}`} />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-ink">
-                          {tx.name}
-                        </p>
-                        <p className="text-[14px] text-mute">{tx.meta}</p>
-                      </div>
-                    </div>
-                    <p
-                      className={`font-bold ${tx.amountColor} text-right shrink-0 ml-4`}
-                    >
-                      {tx.amount}
-                    </p>
-                  </div>
-                ))}
+                    Lihat Semua
+                  </Link>
+                </div>
+                <div className="space-y-3">
+                  {data.recent_transactions.length === 0 ? (
+                    <p className="text-mute text-xs">Belum ada transaksi.</p>
+                  ) : (
+                    data.recent_transactions.slice(0, 6).map((tx) => {
+                      const isIncome = tx.type === "Pemasukan";
+                      return (
+                        <div
+                          key={tx.id}
+                          className="flex items-center justify-between p-3 bg-canvas rounded-[14px] border border-hairline/60"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-8 h-8 rounded-full ${
+                                isIncome ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"
+                              } flex items-center justify-center shrink-0`}
+                            >
+                              {isIncome ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-ink text-xs">
+                                {tx.category_name || tx.type}
+                              </p>
+                              <p className="text-[11px] text-mute">
+                                {tx.tx_date} • {tx.wallet_source_name || "Cash"}
+                                {tx.notes ? ` • ${tx.notes}` : ""}
+                              </p>
+                            </div>
+                          </div>
+                          <p
+                            className={`font-bold text-xs ${
+                              isIncome ? "text-emerald-600" : "text-ink"
+                            } text-right shrink-0 ml-3`}
+                          >
+                            {isIncome ? `+${formatRupiah(tx.amount)}` : `-${formatRupiah(tx.amount)}`}
+                          </p>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             </section>
           </div>
-        </>
+        </div>
       )}
     </PageShell>
   );

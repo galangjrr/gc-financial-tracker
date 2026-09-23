@@ -1,54 +1,43 @@
 "use client";
 
-import * as React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import React, { useState, useEffect } from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerClose,
 } from "@/components/ui/drawer";
+import { api, Wallet, Category } from "@/lib/api";
 import {
-  TrendingDown,
-  TrendingUp,
-  PiggyBank,
-  Receipt,
-  CreditCard,
+  Calendar,
+  Layers,
+  Wallet as WalletIcon,
+  ArrowRightLeft,
+  FileText,
+  Send,
+  X,
+  Check,
+  ParkingCircle,
+  Loader2,
 } from "lucide-react";
 
-const TX_TYPES = [
-  { value: "Pengeluaran", label: "Pengeluaran", icon: TrendingDown, bgClass: "bg-financial-expense" },
-  { value: "Pemasukan", label: "Pemasukan", icon: TrendingUp, bgClass: "bg-financial-income" },
-  { value: "Tabungan", label: "Tabungan", icon: PiggyBank, bgClass: "bg-financial-savings" },
-  { value: "Tagihan", label: "Tagihan", icon: Receipt, bgClass: "bg-financial-bill" },
-  { value: "Liabilitas", label: "Liabilitas", icon: CreditCard, bgClass: "bg-financial-expense" },
+const TX_TABS = [
+  "Pengeluaran",
+  "Pemasukan",
+  "Tabungan",
+  "Liabilitas",
+  "Tagihan",
+  "Transfer",
 ] as const;
 
-const transactionSchema = z.object({
-  type: z.enum(["Pengeluaran", "Pemasukan", "Tabungan", "Tagihan", "Liabilitas"]),
-  amount: z.number().min(1, "Nominal harus lebih dari 0"),
-  category: z.string().min(1, "Pilih kategori"),
-  tx_date: z.string().min(1, "Tanggal wajib diisi"),
-  notes: z.string().optional(),
-});
-
-type TransactionFormValues = z.infer<typeof transactionSchema>;
+type TxTabType = (typeof TX_TABS)[number];
 
 interface TransactionModalProps {
   open: boolean;
@@ -61,16 +50,13 @@ export function TransactionModal({ open, setOpen }: TransactionModalProps) {
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[460px] rounded-[32px] p-8 border-0 bg-canvas">
-          <DialogHeader className="mb-2">
-            <DialogTitle className="font-semibold text-[22px] text-ink">
-              Tambah Transaksi
+        <DialogContent className="sm:max-w-[520px] max-h-[92vh] overflow-y-auto rounded-[32px] p-6 border border-hairline bg-canvas">
+          <DialogHeader className="flex flex-row items-center justify-between pb-2 border-b border-hairline">
+            <DialogTitle className="font-semibold text-[18px] text-ink">
+              Transaksi Baru
             </DialogTitle>
-            <DialogDescription className="text-[16px] text-mute">
-              Masukkan nominal dan detail transaksi kamu.
-            </DialogDescription>
           </DialogHeader>
-          <TransactionForm onSuccess={() => setOpen(false)} />
+          <TransactionContent onSuccess={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
     );
@@ -78,165 +64,393 @@ export function TransactionModal({ open, setOpen }: TransactionModalProps) {
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerContent className="bg-canvas border-hairline">
-        <DrawerHeader className="text-left px-6 pt-6 pb-2">
-          <DrawerTitle className="font-semibold text-[22px] text-ink">
-            Tambah Transaksi
+      <DrawerContent className="bg-canvas border-hairline max-h-[94vh] flex flex-col">
+        <DrawerHeader className="px-6 pt-4 pb-2 text-left border-b border-hairline flex items-center justify-between">
+          <DrawerTitle className="font-semibold text-[18px] text-ink">
+            Transaksi Baru
           </DrawerTitle>
-          <DrawerDescription className="text-[16px] text-mute">
-            Masukkan nominal dan detail transaksi kamu.
-          </DrawerDescription>
         </DrawerHeader>
-        <TransactionForm className="px-6 pb-4" onSuccess={() => setOpen(false)} />
-        <DrawerFooter className="px-6 pb-8 pt-0">
-          <DrawerClose asChild>
-            <Button
-              variant="outline"
-              className="rounded-full h-12 font-bold w-full text-ink border-hairline bg-surface-card hover:bg-secondary-bg"
-            >
-              Batal
-            </Button>
-          </DrawerClose>
-        </DrawerFooter>
+        <div className="flex-1 overflow-y-auto p-4 pb-8">
+          <TransactionContent onSuccess={() => setOpen(false)} />
+        </div>
       </DrawerContent>
     </Drawer>
   );
 }
 
-function TransactionForm({
-  className,
-  onSuccess,
-}: {
-  className?: string;
-  onSuccess: () => void;
-}) {
-  const [loading, setLoading] = React.useState(false);
+function TransactionContent({ onSuccess }: { onSuccess: () => void }) {
+  const [activeTab, setActiveTab] = useState<TxTabType>("Pengeluaran");
+  const [displayAmount, setDisplayAmount] = useState("");
+  const [rawAmount, setRawAmount] = useState(0);
+  const [txDate, setTxDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [categoryId, setCategoryId] = useState("");
+  const [walletSourceId, setWalletSourceId] = useState("");
+  const [walletDestId, setWalletDestId] = useState("");
+  const [notes, setNotes] = useState("");
+  
+  // Biaya parkir (opsional)
+  const [hasParking, setHasParking] = useState(false);
+  const [displayParking, setDisplayParking] = useState("2.000");
+  const [rawParking, setRawParking] = useState(2000);
 
-  const form = useForm<TransactionFormValues>({
-    resolver: zodResolver(transactionSchema),
-    defaultValues: {
-      type: "Pengeluaran",
-      tx_date: new Date().toISOString().split("T")[0],
-      notes: "",
-      category: "",
-    },
-  });
+  // Data dropdown
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [categoriesBySegment, setCategoriesBySegment] = useState<Record<string, Category[]>>({});
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const selectedType = form.watch("type");
+  useEffect(() => {
+    loadFormData();
+  }, []);
 
-  const onSubmit = async (data: TransactionFormValues) => {
+  const loadFormData = async () => {
+    try {
+      const [walletList, catMap] = await Promise.all([
+        api.getWallets(),
+        api.getCategories(),
+      ]);
+      setWallets(walletList);
+      setCategoriesBySegment(catMap);
+
+      // Default wallet: Cash if exists, else first
+      const defaultWallet = walletList.find((w) => w.wallet_name.toLowerCase().includes("cash")) || walletList[0];
+      if (defaultWallet) {
+        setWalletSourceId(defaultWallet.id);
+      }
+      if (walletList.length > 1) {
+        const otherWallet = walletList.find((w) => w.id !== defaultWallet?.id) || walletList[1];
+        setWalletDestId(otherWallet.id);
+      }
+    } catch (err: any) {
+      console.error("Gagal memuat opsi form:", err);
+    }
+  };
+
+  // Sync category when tab changes
+  useEffect(() => {
+    if (activeTab === "Transfer") {
+      setCategoryId("");
+      return;
+    }
+    const currentCats = categoriesBySegment[activeTab] || [];
+    if (currentCats.length > 0) {
+      setCategoryId(currentCats[0].id);
+    } else {
+      setCategoryId("");
+    }
+  }, [activeTab, categoriesBySegment]);
+
+  const handleAmountChange = (val: string) => {
+    const clean = val.replace(/\D/g, "");
+    if (!clean) {
+      setDisplayAmount("");
+      setRawAmount(0);
+      return;
+    }
+    const num = parseInt(clean, 10);
+    setRawAmount(num);
+    setDisplayAmount(num.toLocaleString("id-ID"));
+  };
+
+  const handleParkingChange = (val: string) => {
+    const clean = val.replace(/\D/g, "");
+    if (!clean) {
+      setDisplayParking("");
+      setRawParking(0);
+      return;
+    }
+    const num = parseInt(clean, 10);
+    setRawParking(num);
+    setDisplayParking(num.toLocaleString("id-ID"));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    if (rawAmount <= 0) {
+      setErrorMsg("Nominal transaksi harus lebih dari 0");
+      return;
+    }
+
+    if (activeTab === "Transfer") {
+      if (!walletSourceId || !walletDestId) {
+        setErrorMsg("Pilih dompet asal dan dompet tujuan");
+        return;
+      }
+      if (walletSourceId === walletDestId) {
+        setErrorMsg("Dompet asal dan tujuan tidak boleh sama");
+        return;
+      }
+    } else {
+      if (!walletSourceId) {
+        setErrorMsg("Pilih dompet sumber");
+        return;
+      }
+    }
+
     setLoading(true);
     try {
-      // TODO: Supabase insert
-      console.log("Submitting:", data);
-      form.reset();
-      onSuccess();
-    } catch (err) {
-      console.error(err);
+      if (activeTab === "Transfer") {
+        await api.createTransfer({
+          tx_date: txDate,
+          amount: rawAmount,
+          wallet_source_id: walletSourceId,
+          wallet_dest_id: walletDestId,
+          notes: notes.trim(),
+        });
+      } else {
+        // Transaksi utama
+        await api.createTransaction({
+          tx_date: txDate,
+          type: activeTab,
+          category_id: categoryId || undefined,
+          amount: rawAmount,
+          wallet_source_id: walletSourceId,
+          notes: notes.trim(),
+        });
+
+        // Jika ada biaya parkir terpisah pada pengeluaran
+        if (activeTab === "Pengeluaran" && hasParking && rawParking > 0) {
+          const parkirCat = (categoriesBySegment["Pengeluaran"] || []).find((c) =>
+            c.category_name.toLowerCase().includes("parkir")
+          );
+          await api.createTransaction({
+            tx_date: txDate,
+            type: "Pengeluaran",
+            category_id: parkirCat?.id,
+            amount: rawParking,
+            wallet_source_id: walletSourceId,
+            notes: notes ? `Parkir (${notes})` : "Biaya Parkir",
+          });
+        }
+      }
+
+      setSuccessMsg("Transaksi berhasil dicatat");
+      window.dispatchEvent(new CustomEvent("refresh-data"));
+
+      setTimeout(() => {
+        onSuccess();
+      }, 400);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Gagal menyimpan transaksi");
     } finally {
       setLoading(false);
     }
   };
 
+  const currentCategories = categoriesBySegment[activeTab] || [];
+
   return (
-    <form
-      className={`grid items-start gap-5 ${className || ""}`}
-      onSubmit={form.handleSubmit(onSubmit)}
-    >
-      {/* Transaction Type Chips */}
-      <div className="flex flex-wrap gap-2">
-        {TX_TYPES.map((t) => {
-          const Icon = t.icon;
-          const active = selectedType === t.value;
+    <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+      {/* Tab Pilihan Segment */}
+      <div className="grid grid-cols-3 gap-2">
+        {TX_TABS.map((tab) => {
+          const isActive = activeTab === tab;
           return (
             <button
-              key={t.value}
+              key={tab}
               type="button"
-              onClick={() => form.setValue("type", t.value)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-[14px] font-bold transition-colors ${
-                active
-                  ? `${t.bgClass} text-canvas`
-                  : "bg-surface-card text-ink hover:bg-secondary-bg"
+              onClick={() => setActiveTab(tab)}
+              className={`py-2.5 rounded-[16px] text-xs font-semibold transition-all border ${
+                isActive
+                  ? "bg-ink text-canvas border-ink shadow-sm"
+                  : "bg-surface-card text-body hover:bg-secondary-bg border-hairline"
               }`}
             >
-              <Icon className="w-4 h-4" />
-              {t.label}
+              {tab}
             </button>
           );
         })}
       </div>
 
-      {/* Amount */}
-      <div className="grid gap-2">
-        <Label htmlFor="tx-amount" className="font-semibold text-ink text-[16px]">
-          Nominal Rupiah
-        </Label>
-        <Input
-          type="number"
-          id="tx-amount"
-          placeholder="0"
-          {...form.register("amount", { valueAsNumber: true })}
-          className="h-16 text-2xl font-bold rounded-[16px] px-4 bg-surface-soft border border-hairline focus-visible:ring-primary focus-visible:border-primary"
-        />
-        {form.formState.errors.amount && (
-          <p className="text-xs text-error">
-            {form.formState.errors.amount.message}
-          </p>
-        )}
+      {/* Box Nominal Besar */}
+      <div className="bg-surface-card p-5 rounded-[20px] border border-hairline text-center flex flex-col items-center">
+        <p className="text-[11px] text-mute font-semibold uppercase tracking-wider mb-2">
+          MAU CATAT BERAPA?
+        </p>
+        <div className="flex items-center justify-center gap-2 w-full max-w-xs">
+          <span className="text-brand-emerald text-2xl font-bold">Rp</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={displayAmount}
+            onChange={(e) => handleAmountChange(e.target.value)}
+            placeholder="0"
+            autoFocus
+            className="bg-transparent text-ink text-3xl md:text-4xl font-extrabold w-full text-center focus:outline-none placeholder:text-ash border-none"
+          />
+        </div>
       </div>
 
-      {/* Category */}
-      <div className="grid gap-2">
-        <Label htmlFor="tx-category" className="font-semibold text-ink text-[16px]">
-          Kategori
-        </Label>
-        <Input
-          id="tx-category"
-          placeholder="Makanan, Transportasi, dll"
-          {...form.register("category")}
-          className="h-12 rounded-[16px] px-4 bg-surface-soft border border-hairline focus-visible:ring-primary focus-visible:border-primary"
-        />
-        {form.formState.errors.category && (
-          <p className="text-xs text-error">
-            {form.formState.errors.category.message}
-          </p>
-        )}
+      {/* Row: Kapan (Tanggal) */}
+      <div className="bg-surface-card p-3.5 rounded-[16px] border border-hairline flex items-center gap-3">
+        <div className="w-10 h-10 rounded-[12px] bg-secondary-bg flex items-center justify-center text-body border border-hairline shrink-0">
+          <Calendar className="w-5 h-5" />
+        </div>
+        <div className="flex-1">
+          <label className="block text-[11px] text-mute font-medium">Kapan?</label>
+          <input
+            type="date"
+            value={txDate}
+            onChange={(e) => setTxDate(e.target.value)}
+            className="w-full bg-transparent text-ink text-sm font-semibold focus:outline-none border-none p-0 cursor-pointer"
+          />
+        </div>
       </div>
 
-      {/* Date */}
-      <div className="grid gap-2">
-        <Label htmlFor="tx-date" className="font-semibold text-ink text-[16px]">
-          Tanggal
-        </Label>
-        <Input
-          type="date"
-          id="tx-date"
-          {...form.register("tx_date")}
-          className="h-12 rounded-[16px] px-4 bg-surface-soft border border-hairline focus-visible:ring-primary focus-visible:border-primary"
-        />
+      {/* Row: Buat Apa (Kategori) — Sembunyikan jika Transfer */}
+      {activeTab !== "Transfer" && (
+        <div className="bg-surface-card p-3.5 rounded-[16px] border border-hairline flex items-center gap-3">
+          <div className="w-10 h-10 rounded-[12px] bg-secondary-bg flex items-center justify-center text-body border border-hairline shrink-0">
+            <Layers className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <label className="block text-[11px] text-mute font-medium">Buat Apa?</label>
+            <select
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="w-full bg-transparent text-ink text-sm font-semibold focus:outline-none appearance-none cursor-pointer border-none p-0"
+            >
+              {currentCategories.length === 0 ? (
+                <option value="">Tidak ada kategori</option>
+              ) : (
+                currentCategories.map((c) => (
+                  <option key={c.id} value={c.id} className="bg-canvas text-ink">
+                    {c.category_name}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Row: Pakai Uang Mana (Dompet Sumber) */}
+      <div className="bg-surface-card p-3.5 rounded-[16px] border border-hairline flex items-center gap-3">
+        <div className="w-10 h-10 rounded-[12px] bg-secondary-bg flex items-center justify-center text-body border border-hairline shrink-0">
+          <WalletIcon className="w-5 h-5" />
+        </div>
+        <div className="flex-1">
+          <label className="block text-[11px] text-mute font-medium">
+            {activeTab === "Transfer" ? "Dari Dompet Mana?" : "Pakai Uang Mana?"}
+          </label>
+          <select
+            value={walletSourceId}
+            onChange={(e) => setWalletSourceId(e.target.value)}
+            className="w-full bg-transparent text-ink text-sm font-semibold focus:outline-none appearance-none cursor-pointer border-none p-0"
+          >
+            {wallets.map((w) => (
+              <option key={w.id} value={w.id} className="bg-canvas text-ink">
+                {w.wallet_name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Notes */}
-      <div className="grid gap-2">
-        <Label htmlFor="tx-notes" className="font-semibold text-ink text-[16px]">
-          Catatan (Opsional)
-        </Label>
-        <Input
-          id="tx-notes"
-          placeholder="Makan siang bareng temen"
-          {...form.register("notes")}
-          className="h-12 rounded-[16px] px-4 bg-surface-soft border border-hairline focus-visible:ring-primary focus-visible:border-primary"
-        />
+      {/* Row: Ke Dompet Mana (Khusus Transfer) */}
+      {activeTab === "Transfer" && (
+        <div className="bg-surface-card p-3.5 rounded-[16px] border border-hairline flex items-center gap-3">
+          <div className="w-10 h-10 rounded-[12px] bg-secondary-bg flex items-center justify-center text-body border border-hairline shrink-0">
+            <ArrowRightLeft className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <label className="block text-[11px] text-mute font-medium">Ke Dompet Mana?</label>
+            <select
+              value={walletDestId}
+              onChange={(e) => setWalletDestId(e.target.value)}
+              className="w-full bg-transparent text-ink text-sm font-semibold focus:outline-none appearance-none cursor-pointer border-none p-0"
+            >
+              {wallets.map((w) => (
+                <option key={w.id} value={w.id} className="bg-canvas text-ink">
+                  {w.wallet_name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Row: Catatan Kecil */}
+      <div className="bg-surface-card p-3.5 rounded-[16px] border border-hairline flex items-center gap-3">
+        <div className="w-10 h-10 rounded-[12px] bg-secondary-bg flex items-center justify-center text-body border border-hairline shrink-0">
+          <FileText className="w-5 h-5" />
+        </div>
+        <div className="flex-1">
+          <label className="block text-[11px] text-mute font-medium">Catatan Kecil</label>
+          <input
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Kasih keterangan dikit..."
+            className="w-full bg-transparent text-ink text-sm font-semibold focus:outline-none placeholder:text-ash border-none p-0"
+          />
+        </div>
       </div>
 
-      {/* Submit */}
-      <Button
+      {/* Row: Biaya Parkir (Khusus Pengeluaran) */}
+      {activeTab === "Pengeluaran" && (
+        <div className="bg-surface-card p-3.5 rounded-[16px] border border-hairline">
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={hasParking}
+              onChange={(e) => setHasParking(e.target.checked)}
+              className="w-4 h-4 rounded border-hairline text-primary focus:ring-primary accent-[#e60023]"
+            />
+            <span className="text-sm font-semibold text-ink">Ada biaya parkir?</span>
+          </label>
+
+          {hasParking && (
+            <div className="mt-3 pt-3 border-t border-hairline flex items-center gap-3">
+              <div className="w-8 h-8 rounded-[8px] bg-secondary-bg flex items-center justify-center text-body border border-hairline shrink-0">
+                <ParkingCircle className="w-4 h-4" />
+              </div>
+              <div className="flex-1 flex items-center gap-2">
+                <span className="text-brand-emerald text-sm font-bold">Rp</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={displayParking}
+                  onChange={(e) => handleParkingChange(e.target.value)}
+                  placeholder="2.000"
+                  className="bg-transparent text-ink text-base font-bold focus:outline-none border-none p-0 w-full"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Pesan Error & Sukses */}
+      {errorMsg && (
+        <p className="text-xs text-error font-semibold text-center">{errorMsg}</p>
+      )}
+      {successMsg && (
+        <p className="text-xs text-emerald-600 font-semibold text-center flex items-center justify-center gap-1">
+          <Check className="w-4 h-4" /> {successMsg}
+        </p>
+      )}
+
+      {/* Tombol Simpan */}
+      <button
         type="submit"
         disabled={loading}
-        className="h-12 mt-1 rounded-[16px] bg-primary hover:bg-primary-pressed font-bold text-primary-foreground text-[16px] w-full transition-colors"
+        className="w-full bg-[#e60023] hover:bg-[#cc001f] active:scale-[0.98] text-white font-bold h-12 rounded-[16px] transition-all flex items-center justify-center gap-2 text-sm shadow-[0_4px_16px_rgba(230,0,35,0.25)]"
       >
-        {loading ? "Menyimpan..." : "Simpan Transaksi"}
-      </Button>
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" /> Menyimpan...
+          </>
+        ) : (
+          <>
+            Sip, Catat Sekarang <Send className="w-4 h-4" />
+          </>
+        )}
+      </button>
     </form>
   );
 }

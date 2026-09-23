@@ -3,106 +3,83 @@
 import React from "react";
 import { Drawer } from "vaul";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { LineChart, FileText, Target, Handshake, Users, Settings, X, Wallet } from "lucide-react";
+import {
+  Wallet,
+  LineChart,
+  FileText,
+  Target,
+  Handshake,
+  Users,
+  Settings,
+  X,
+  LogOut,
+} from "lucide-react";
 
 interface MobileMenuDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const MENU_ITEMS = [
-  { name: "Pantau Duit", href: "/analytics", icon: LineChart },
-  { name: "Laporan", href: "/reports", icon: FileText },
-  { name: "Nabung", href: "/goals", icon: Target },
-  { name: "Catat Utang", href: "/debts", icon: Handshake },
-  { name: "Keluarga", href: "/family", icon: Users },
-  { name: "Pengaturan", href: "/settings", icon: Settings },
+const MENU_GRID = [
+  { name: "Dompet", href: "/wallets", icon: Wallet, color: "text-blue-500", bg: "bg-blue-50" },
+  { name: "Pantau Duit", href: "/analytics", icon: LineChart, color: "text-emerald-500", bg: "bg-emerald-50" },
+  { name: "Laporan", href: "/reports", icon: FileText, color: "text-amber-500", bg: "bg-amber-50" },
+  { name: "Nabung", href: "/goals", icon: Target, color: "text-purple-500", bg: "bg-purple-50" },
+  { name: "Catat Utang", href: "/debts", icon: Handshake, color: "text-rose-500", bg: "bg-rose-50" },
+  { name: "Keluarga", href: "/family", icon: Users, color: "text-sky-500", bg: "bg-sky-50" },
+  { name: "Pengaturan", href: "/settings", icon: Settings, color: "text-slate-600", bg: "bg-slate-100" },
 ];
 
 export function MobileMenuDrawer({ open, onOpenChange }: MobileMenuDrawerProps) {
-  const pathname = usePathname();
-
   return (
     <Drawer.Root open={open} onOpenChange={onOpenChange}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-ink/50 z-50 transition-opacity" />
-        <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 mt-24 flex h-[85vh] flex-col rounded-t-[32px] bg-canvas outline-none">
-          <div className="flex-1 overflow-y-auto p-6">
-            <div className="mx-auto mb-8 h-1.5 w-12 shrink-0 rounded-full bg-hairline" />
+        <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-[32px] bg-canvas outline-none max-w-lg mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.12)]">
+          <div className="p-6 pb-8">
+            <div className="mx-auto mb-5 h-1.5 w-12 shrink-0 rounded-full bg-hairline" />
             
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-[22px] font-bold text-ink">Menu Lainnya</h2>
-              <button onClick={() => onOpenChange(false)} className="w-10 h-10 rounded-full bg-surface-card flex items-center justify-center text-ink">
-                <X className="w-5 h-5" />
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl font-bold text-ink">Lainnya</h2>
+              <button 
+                onClick={() => onOpenChange(false)} 
+                className="w-9 h-9 rounded-full bg-surface-card flex items-center justify-center text-ink hover:bg-secondary-bg transition-colors"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-2 mt-4">
-            <Link 
-              href="/wallets" 
-              onClick={() => onOpenChange(false)}
-              className={`flex items-center gap-3 px-4 py-4 rounded-[16px] transition-colors ${
-                pathname === "/wallets" ? "bg-primary text-primary-foreground font-bold" : "text-ink hover:bg-surface-soft font-semibold"
-              }`}
-            >
-              <Wallet className="w-5 h-5" /> Dompet & Rekening
-            </Link>
-            <Link 
-              href="/analytics" 
-              onClick={() => onOpenChange(false)}
-              className={`flex items-center gap-3 px-4 py-4 rounded-[16px] transition-colors ${
-                pathname === "/analytics" ? "bg-primary text-primary-foreground font-bold" : "text-ink hover:bg-surface-soft font-semibold"
-              }`}
-            >
-              <LineChart className="w-5 h-5" /> Pantau Duit
-            </Link>
-            <Link 
-              href="/debts" 
-              onClick={() => onOpenChange(false)}
-              className={`flex items-center gap-3 px-4 py-4 rounded-[16px] transition-colors ${
-                pathname === "/debts" ? "bg-primary text-primary-foreground font-bold" : "text-ink hover:bg-surface-soft font-semibold"
-              }`}
-            >
-              <Handshake className="w-5 h-5" /> Catat Utang
-            </Link>
-            <Link 
-              href="/goals" 
-              onClick={() => onOpenChange(false)}
-              className={`flex items-center gap-3 px-4 py-4 rounded-[16px] transition-colors ${
-                pathname === "/goals" ? "bg-primary text-primary-foreground font-bold" : "text-ink hover:bg-surface-soft font-semibold"
-              }`}
-            >
-              <Target className="w-5 h-5" /> Nabung
-            </Link>
-            <Link 
-              href="/reports" 
-              onClick={() => onOpenChange(false)}
-              className={`flex items-center gap-3 px-4 py-4 rounded-[16px] transition-colors ${
-                pathname === "/reports" ? "bg-primary text-primary-foreground font-bold" : "text-ink hover:bg-surface-soft font-semibold"
-              }`}
-            >
-              <FileText className="w-5 h-5" /> Laporan
-            </Link>
-            <Link 
-              href="/family" 
-              onClick={() => onOpenChange(false)}
-              className={`flex items-center gap-3 px-4 py-4 rounded-[16px] transition-colors ${
-                pathname === "/family" ? "bg-primary text-primary-foreground font-bold" : "text-ink hover:bg-surface-soft font-semibold"
-              }`}
-            >
-              <Users className="w-5 h-5" /> Keluarga
-            </Link>
-            <Link 
-              href="/settings" 
-              onClick={() => onOpenChange(false)}
-              className={`flex items-center gap-3 px-4 py-4 rounded-[16px] transition-colors ${
-                pathname === "/settings" ? "bg-primary text-primary-foreground font-bold" : "text-ink hover:bg-surface-soft font-semibold"
-              }`}
-            >
-              <Settings className="w-5 h-5" /> Pengaturan
-            </Link>
-          </div>
+            {/* 3-Column Grid persis seperti UI Lama */}
+            <div className="grid grid-cols-3 gap-3">
+              {MENU_GRID.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => onOpenChange(false)}
+                    className="flex flex-col items-center justify-center gap-2 p-3.5 bg-surface-card hover:bg-secondary-bg rounded-[20px] transition-all border border-hairline/60 hover:border-hairline"
+                  >
+                    <div className={`w-11 h-11 rounded-2xl ${item.bg} flex items-center justify-center`}>
+                      <Icon className={`w-6 h-6 ${item.color}`} />
+                    </div>
+                    <span className="text-[11px] font-bold text-ink text-center">
+                      {item.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 pt-5 border-t border-hairline">
+              <Link
+                href="/login"
+                onClick={() => onOpenChange(false)}
+                className="w-full flex justify-center items-center gap-2 py-3 bg-rose-50 text-[#e60023] hover:bg-rose-100 font-bold rounded-[16px] text-xs transition-colors"
+              >
+                <LogOut className="w-4 h-4" /> Keluar Aplikasi
+              </Link>
+            </div>
           </div>
         </Drawer.Content>
       </Drawer.Portal>

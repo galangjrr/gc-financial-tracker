@@ -1,86 +1,164 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PageShell } from "@/components/shared/page-shell";
 import { EmptyState } from "@/components/shared/empty-state";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
-import { Target, Plus, Shield, Plane, Wrench } from "lucide-react";
-
+import { Target, Plus, Trash2 } from "lucide-react";
 import { GoalModal } from "@/components/modals/goal-modal";
-
-type ViewState = "ready" | "loading" | "empty";
+import { api, Goal } from "@/lib/api";
+import { formatRupiah } from "@/lib/utils";
 
 export default function GoalsPage() {
-  const [viewState] = useState<ViewState>("ready");
+  const [loading, setLoading] = useState(true);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    loadGoals();
+  }, []);
+
+  const loadGoals = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getGoals();
+      setGoals(data);
+    } catch (err) {
+      console.error("Gagal memuat target nabung:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Hapus target "${name}"?`)) return;
+    try {
+      await api.deleteGoal(id);
+      setGoals((prev) => prev.filter((g) => g.id !== id));
+    } catch (err: any) {
+      alert(err.message || "Gagal menghapus");
+    }
+  };
+
+  const totalTarget = goals.reduce((acc, g) => acc + g.target_amount, 0);
+  const totalSaved = goals.reduce((acc, g) => acc + g.saved_amount, 0);
 
   return (
     <PageShell
-      title="Nabung"
-      subtitle="Rencanakan target impianmu"
+      title="Nabung Impian"
+      subtitle="Tetapkan tujuan keuangan keluarga dan pantau progres pencapaiannya"
     >
       <GoalModal open={isModalOpen} setOpen={setIsModalOpen} />
 
-      {viewState === "loading" && <DashboardSkeleton />}
-
-      {viewState === "empty" && (
-        <EmptyState
-          icon={Target}
-          title="Belum Ada Target"
-          description="Mulai menabung untuk dana darurat, liburan, atau barang impianmu."
-          actionLabel="Buat Target Nabung"
-          onAction={() => setIsModalOpen(true)}
-        />
-      )}
-
-      {viewState === "ready" && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-[22px] font-bold text-ink">Target Aktif</h3>
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="flex h-10 items-center justify-center gap-2 rounded-md bg-brand-700 px-4 text-[14px] font-bold text-canvas hover:bg-brand-900 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Target Baru
-            </button>
+      <div className="space-y-6">
+        {/* KPI Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="bg-surface-card p-4 rounded-[16px] border border-hairline">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+              TOTAL GOALS
+            </p>
+            <p className="text-2xl font-bold text-ink">{goals.length}</p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              { title: "Dana Darurat", target: "Rp 15.000.000", current: "Rp 5.000.000", pct: 33, icon: Shield },
-              { title: "Liburan ke Bali", target: "Rp 5.000.000", current: "Rp 4.500.000", pct: 90, icon: Plane },
-              { title: "Servis Motor", target: "Rp 1.000.000", current: "Rp 200.000", pct: 20, icon: Wrench },
-            ].map((goal, i) => (
-              <div key={i} className="bg-canvas border border-hairline rounded-[24px] p-6 space-y-6 flex flex-col justify-between hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)] transition-shadow">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="w-12 h-12 rounded-full bg-surface-soft flex items-center justify-center mb-4 border border-hairline">
-                      <goal.icon className="w-6 h-6 text-ink" />
-                    </div>
-                    <h4 className="font-bold text-ink text-[18px]">{goal.title}</h4>
-                  </div>
-                  <span className="font-bold text-brand-700 text-[18px]">{goal.pct}%</span>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between text-[14px] mb-2">
-                    <span className="text-ink font-semibold">{goal.current}</span>
-                    <span className="text-mute">dari {goal.target}</span>
-                  </div>
-                  <div className="w-full bg-secondary-bg rounded-full h-3">
-                    <div className="bg-brand-700 h-3 rounded-full transition-all duration-500" style={{ width: `${goal.pct}%` }} />
-                  </div>
-                </div>
-                
-                <button className="w-full h-10 bg-surface-card rounded-[16px] text-ink font-bold hover:bg-secondary-bg transition-colors">
-                  Top Up
-                </button>
-              </div>
-            ))}
+          <div className="bg-surface-card p-4 rounded-[16px] border border-emerald-500/60">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+              TOTAL TARGET
+            </p>
+            <p className="text-xl md:text-2xl font-bold text-emerald-600 truncate">
+              {formatRupiah(totalTarget)}
+            </p>
+          </div>
+          <div className="bg-surface-card p-4 rounded-[16px] border border-hairline col-span-2 md:col-span-1">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+              TOTAL TERKUMPUL
+            </p>
+            <p className="text-xl md:text-2xl font-bold text-ink truncate">
+              {formatRupiah(totalSaved)}
+            </p>
           </div>
         </div>
-      )}
+
+        {/* Action Header */}
+        <div className="flex justify-between items-center">
+          <h3 className="font-bold text-ink text-base">Daftar Impian</h3>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="h-10 px-4 rounded-full bg-[#e60023] hover:bg-[#cc001f] text-white font-bold flex items-center justify-center gap-1.5 text-xs shadow-[0_4px_12px_rgba(230,0,35,0.2)] transition-all"
+          >
+            <Plus className="w-4 h-4" /> Tambah Goal Baru
+          </button>
+        </div>
+
+        {/* Goals List */}
+        {loading ? (
+          <DashboardSkeleton />
+        ) : goals.length === 0 ? (
+          <EmptyState
+            icon={Target}
+            title="Belum Ada Impian"
+            description="Mulai rencanakan target tabungan impian keluargamu sekarang."
+            actionLabel="Tambah Goal Baru"
+            onAction={() => setIsModalOpen(true)}
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {goals.map((goal) => {
+              const pct = goal.target_amount > 0 ? Math.round((goal.saved_amount / goal.target_amount) * 100) : 0;
+              return (
+                <div
+                  key={goal.id}
+                  className="bg-surface-card border border-hairline rounded-[24px] p-6 space-y-4 group hover:border-hairline/90 transition-all"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-canvas border border-hairline flex items-center justify-center text-xl shrink-0">
+                        {goal.icon || "🎯"}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-ink text-base">
+                          {goal.name}
+                        </h4>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary-bg text-mute">
+                          Prioritas: {goal.priority}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleDelete(goal.id, goal.name)}
+                      title="Hapus Target"
+                      className="opacity-0 group-hover:opacity-100 p-2 text-mute hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-baseline mb-2">
+                      <span className="text-xs font-semibold text-mute">Progres</span>
+                      <span className="text-xs font-bold text-ink">{pct}%</span>
+                    </div>
+                    <div className="w-full bg-secondary-bg rounded-full h-2.5 overflow-hidden">
+                      <div
+                        className="bg-[#e60023] h-2.5 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(pct, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2 border-t border-hairline text-xs font-semibold">
+                    <span className="text-mute">
+                      Terkumpul: <strong className="text-ink">{formatRupiah(goal.saved_amount)}</strong>
+                    </span>
+                    <span className="text-mute">
+                      Target: <strong className="text-ink">{formatRupiah(goal.target_amount)}</strong>
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </PageShell>
   );
 }

@@ -1,107 +1,216 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PageShell } from "@/components/shared/page-shell";
 import { EmptyState } from "@/components/shared/empty-state";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
-import { Handshake, Plus } from "lucide-react";
-
+import { Handshake, Plus, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import { DebtModal } from "@/components/modals/debt-modal";
-
-type ViewState = "ready" | "loading" | "empty";
-type TabState = "utang" | "diutangin";
+import { api, Debt } from "@/lib/api";
+import { formatRupiah } from "@/lib/utils";
 
 export default function DebtsPage() {
-  const [viewState] = useState<ViewState>("ready");
-  const [activeTab, setActiveTab] = useState<TabState>("utang");
+  const [loading, setLoading] = useState(true);
+  const [debts, setDebts] = useState<Debt[]>([]);
+  const [filterType, setFilterType] = useState<"Semua" | "Utang" | "Piutang">("Semua");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const utangList = [
-    { name: "Andi (Temen Kantor)", desc: "Talangin makan siang", amount: "Rp 50.000", date: "Jatuh Tempo: 25 Jul 2026", type: "utang" },
-    { name: "Kredit Kulkas", desc: "Cicilan bulan ke-3", amount: "Rp 450.000", date: "Jatuh Tempo: 1 Agu 2026", type: "utang" },
-  ];
+  useEffect(() => {
+    loadDebts();
+  }, []);
 
-  const diutanginList = [
-    { name: "Budi (Saudara)", desc: "Pinjam buat berobat", amount: "Rp 500.000", date: "Jatuh Tempo: Belum diset", type: "diutangin" },
-    { name: "Kantor", desc: "Reimburse tiket pesawat", amount: "Rp 2.500.000", date: "Jatuh Tempo: 30 Jul 2026", type: "diutangin" },
-  ];
+  const loadDebts = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getDebts();
+      setDebts(data);
+    } catch (err) {
+      console.error("Gagal memuat catatan utang:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const currentList = activeTab === "utang" ? utangList : diutanginList;
+  const handleDelete = async (id: string, person: string) => {
+    if (!window.confirm(`Hapus catatan utang piutang dengan ${person}?`)) return;
+    try {
+      await api.deleteDebt(id);
+      setDebts((prev) => prev.filter((d) => d.id !== id));
+    } catch (err: any) {
+      alert(err.message || "Gagal menghapus");
+    }
+  };
+
+  // KPIs
+  const totalUtang = debts.filter((d) => d.type === "Utang").reduce((acc, d) => acc + d.amount, 0);
+  const totalPiutang = debts.filter((d) => d.type === "Piutang").reduce((acc, d) => acc + d.amount, 0);
+  const sisaUtang = debts.filter((d) => d.type === "Utang" && d.status !== "Lunas").reduce((acc, d) => acc + (d.amount - d.installment_paid), 0);
+  const sisaPiutang = debts.filter((d) => d.type === "Piutang" && d.status !== "Lunas").reduce((acc, d) => acc + (d.amount - d.installment_paid), 0);
+
+  const filteredDebts = debts.filter((d) => {
+    if (filterType === "Semua") return true;
+    return d.type === filterType;
+  });
 
   return (
     <PageShell
       title="Catat Utang"
-      subtitle="Kelola utang dan piutang agar tidak lupa"
+      subtitle="Pantau utang piutang keluarga agar tertib dan transparan"
     >
       <DebtModal open={isModalOpen} setOpen={setIsModalOpen} />
 
-      {viewState === "loading" && <DashboardSkeleton />}
-
-      {viewState === "empty" && (
-        <EmptyState
-          icon={Handshake}
-          title="Bebas Utang!"
-          description="Bagus! Kamu tidak memiliki catatan utang atau piutang aktif saat ini."
-          actionLabel="Catat Baru"
-          onAction={() => setIsModalOpen(true)}
-        />
-      )}
-
-      {viewState === "ready" && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div className="flex bg-surface-card rounded-full p-1 border border-hairline">
-              <button 
-                onClick={() => setActiveTab("utang")}
-                className={`px-6 py-2 rounded-full font-bold text-[14px] transition-colors ${
-                  activeTab === "utang" ? "bg-ink text-canvas shadow-sm" : "text-ink hover:bg-secondary-bg"
-                }`}
-              >
-                Aku Utang
-              </button>
-              <button 
-                onClick={() => setActiveTab("diutangin")}
-                className={`px-6 py-2 rounded-full font-bold text-[14px] transition-colors ${
-                  activeTab === "diutangin" ? "bg-ink text-canvas shadow-sm" : "text-ink hover:bg-secondary-bg"
-                }`}
-              >
-                Diutangin
-              </button>
-            </div>
-            
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="flex h-10 items-center justify-center gap-2 rounded-md bg-secondary-bg px-4 text-[14px] font-bold text-ink hover:bg-[#c8c8c1] transition-colors"
-            >
-              <Plus className="w-4 h-4" /> Catat
-            </button>
+      <div className="space-y-6">
+        {/* 4 Summary Cards Klasik GC Finance */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-surface-card p-4 rounded-[16px] border border-hairline">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+              TOTAL UTANG
+            </p>
+            <h3 className="text-xl font-bold text-rose-600 truncate">
+              {formatRupiah(totalUtang)}
+            </h3>
           </div>
 
-          <section className="bg-canvas border border-hairline rounded-[32px] p-6 md:p-8">
-            <div className="space-y-4">
-              {currentList.map((debt, i) => (
-                <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-surface-card rounded-[16px] gap-4">
+          <div className="bg-surface-card p-4 rounded-[16px] border border-hairline">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+              TOTAL PIUTANG
+            </p>
+            <h3 className="text-xl font-bold text-emerald-600 truncate">
+              {formatRupiah(totalPiutang)}
+            </h3>
+          </div>
+
+          <div className="bg-surface-card p-4 rounded-[16px] border border-hairline">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+              SISA UTANG
+            </p>
+            <h3 className="text-xl font-bold text-rose-600 truncate">
+              {formatRupiah(sisaUtang)}
+            </h3>
+          </div>
+
+          <div className="bg-surface-card p-4 rounded-[16px] border border-hairline">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+              SISA PIUTANG
+            </p>
+            <h3 className="text-xl font-bold text-emerald-600 truncate">
+              {formatRupiah(sisaPiutang)}
+            </h3>
+          </div>
+        </div>
+
+        {/* Filter Bar */}
+        <div className="flex justify-between items-center">
+          <div className="flex gap-2">
+            {(["Semua", "Utang", "Piutang"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setFilterType(t)}
+                className={`px-4 py-1.5 rounded-full font-bold text-xs transition-colors ${
+                  filterType === t
+                    ? "bg-ink text-canvas shadow-sm"
+                    : "bg-surface-card text-mute hover:text-ink hover:bg-secondary-bg border border-hairline"
+                }`}
+              >
+                {t === "Semua" ? "Semua" : `Hanya ${t}`}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="h-10 px-4 rounded-full bg-[#e60023] hover:bg-[#cc001f] text-white font-bold flex items-center justify-center gap-1.5 text-xs shadow-[0_4px_12px_rgba(230,0,35,0.2)] transition-all"
+          >
+            <Plus className="w-4 h-4" /> Catat Baru
+          </button>
+        </div>
+
+        {/* Content */}
+        {loading ? (
+          <DashboardSkeleton />
+        ) : filteredDebts.length === 0 ? (
+          <EmptyState
+            icon={Handshake}
+            title="Tidak Ada Catatan Utang"
+            description="Bagus! Tidak ada catatan utang piutang aktif di kategori ini."
+            actionLabel="Catat Sekarang"
+            onAction={() => setIsModalOpen(true)}
+          />
+        ) : (
+          <div className="space-y-3">
+            {filteredDebts.map((item) => {
+              const isPiutang = item.type === "Piutang";
+              const isLunas = item.status === "Lunas";
+
+              return (
+                <div
+                  key={item.id}
+                  className="bg-surface-card border border-hairline rounded-[20px] p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+                >
                   <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${activeTab === "utang" ? "bg-financial-expense/10" : "bg-financial-income/10"}`}>
-                      <Handshake className={`w-6 h-6 ${activeTab === "utang" ? "text-financial-expense" : "text-financial-income"}`} />
+                    <div
+                      className={`w-11 h-11 rounded-full ${
+                        isPiutang ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                      } flex items-center justify-center shrink-0 border border-hairline`}
+                    >
+                      <Handshake className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="font-semibold text-ink text-[16px]">{debt.name}</p>
-                      <p className="text-mute text-[14px]">{debt.desc} • <span className={activeTab === "utang" ? "text-financial-expense" : "text-financial-income"}>{debt.date}</span></p>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-ink text-base">
+                          {item.person}
+                        </h4>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            isPiutang
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {item.type}
+                        </span>
+                        {isLunas ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" /> Lunas
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" /> Belum Lunas
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-mute mt-1">
+                        {item.debt_date} • {item.notes || "Tanpa catatan"}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <p className={`font-bold text-[18px] ${activeTab === "utang" ? "text-financial-expense" : "text-financial-income"}`}>{debt.amount}</p>
-                    <button className="h-10 px-6 rounded-full bg-canvas border border-hairline text-ink font-bold hover:bg-secondary-bg transition-colors text-[14px]">
-                      {activeTab === "utang" ? "Bayar" : "Tagih"}
+
+                  <div className="flex items-center justify-between md:justify-end gap-4 shrink-0">
+                    <div className="text-right">
+                      <p className={`font-extrabold text-base md:text-lg ${isPiutang ? "text-emerald-600" : "text-rose-600"}`}>
+                        {formatRupiah(item.amount)}
+                      </p>
+                      {item.installment_paid > 0 && (
+                        <p className="text-[11px] text-mute">
+                          Terbayar: {formatRupiah(item.installment_paid)}
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => handleDelete(item.id, item.person)}
+                      title="Hapus Catatan"
+                      className="opacity-0 group-hover:opacity-100 p-2 text-mute hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </PageShell>
   );
 }

@@ -11,6 +11,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
 
+  React.useEffect(() => {
+    const handleOpenModal = () => setIsTxModalOpen(true);
+    window.addEventListener("open-tx-modal", handleOpenModal);
+    return () => window.removeEventListener("open-tx-modal", handleOpenModal);
+  }, []);
+
   return (
     <div className="bg-surface-soft min-h-screen text-body font-sans flex">
       <Sidebar onOpenTransactionModal={() => setIsTxModalOpen(true)} />
