@@ -36,7 +36,7 @@ export function MobileMenuDrawer({ open, onOpenChange }: MobileMenuDrawerProps) 
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-ink/50 z-50 transition-opacity" />
         <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-[32px] bg-canvas outline-none max-w-lg mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.12)]">
-          <div className="p-6 pb-8">
+          <div className="p-6 pb-[max(env(safe-area-inset-bottom,0px),24px)]">
             <div className="mx-auto mb-5 h-1.5 w-12 shrink-0 rounded-full bg-hairline" />
             
             <div className="flex items-center justify-between mb-5">

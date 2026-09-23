@@ -42,18 +42,19 @@ export function MobileNav({ onOpenMenu, onOpenTransactionModal }: MobileNavProps
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-canvas border-t border-hairline z-40 pb-safe shadow-[0_-4px_24px_rgba(0,0,0,0.02)]">
-      <div className="flex items-center justify-between px-4 py-2 relative">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-canvas/95 backdrop-blur-lg border-t border-hairline z-40 pb-[max(env(safe-area-inset-bottom,0px),12px)] shadow-[0_-4px_24px_rgba(0,0,0,0.03)]">
+      <div className="flex items-center justify-between px-2 pt-1 relative">
         {/* Left Items */}
         <div className="flex flex-1 justify-around">
           {NAV_ITEMS.map(renderLink)}
         </div>
 
         {/* Center FAB */}
-        <div className="flex justify-center mx-2 shrink-0 relative -top-6">
+        <div className="flex justify-center mx-1 shrink-0 relative -top-5">
           <button 
             onClick={onOpenTransactionModal}
-            className="w-[60px] h-[60px] rounded-full flex items-center justify-center shadow-[0_8px_24px_rgba(230,0,35,0.4)] hover:scale-105 transition-transform active:scale-95 bg-transparent overflow-hidden p-0"
+            className="w-[62px] h-[62px] rounded-full flex items-center justify-center shadow-[0_8px_24px_rgba(230,0,35,0.4)] hover:scale-105 active:scale-90 transition-transform bg-transparent overflow-hidden p-0"
+            aria-label="Catat Transaksi Baru"
           >
             <img 
               src="/assets/images/plus-button.png" 
@@ -68,9 +69,10 @@ export function MobileNav({ onOpenMenu, onOpenTransactionModal }: MobileNavProps
           {NAV_ITEMS_RIGHT.map(renderLink)}
           <button
             onClick={onOpenMenu}
-            className="flex flex-col items-center justify-center p-2 min-w-[64px] rounded-[16px] transition-colors text-mute font-medium hover:text-ink hover:bg-surface-card"
+            className="flex flex-col items-center justify-center p-2 min-w-[60px] rounded-[16px] transition-colors text-mute font-medium hover:text-ink active:scale-95"
+            aria-label="Buka Menu Lainnya"
           >
-            <Menu className="w-6 h-6 mb-1" />
+            <Menu className="w-5 h-5 mb-1" />
             <span className="text-[10px]">Menu</span>
           </button>
         </div>

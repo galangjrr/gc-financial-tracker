@@ -111,7 +111,7 @@ export function WalletModal({ open, setOpen }: { open: boolean; setOpen: (val: b
               )}
             </div>
 
-            <div className="pt-4 border-t border-hairline">
+            <div className="pt-4 pb-[max(env(safe-area-inset-bottom,0px),16px)] border-t border-hairline">
               <button 
                 type="submit"
                 disabled={loading}

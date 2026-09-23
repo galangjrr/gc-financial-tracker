@@ -70,7 +70,7 @@ export function TransactionModal({ open, setOpen }: TransactionModalProps) {
             Transaksi Baru
           </DrawerTitle>
         </DrawerHeader>
-        <div className="flex-1 overflow-y-auto p-4 pb-8">
+        <div className="flex-1 overflow-y-auto p-4 pb-[max(env(safe-area-inset-bottom,0px),24px)]">
           <TransactionContent onSuccess={() => setOpen(false)} />
         </div>
       </DrawerContent>

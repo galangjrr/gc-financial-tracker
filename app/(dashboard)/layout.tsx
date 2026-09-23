@@ -18,10 +18,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   return (
-    <div className="bg-surface-soft min-h-screen text-body font-sans flex">
+    <div className="bg-surface-soft min-h-[100dvh] text-body font-sans flex">
       <Sidebar onOpenTransactionModal={() => setIsTxModalOpen(true)} />
       
-      <div className="flex-1 md:pl-[260px] flex flex-col min-h-screen pb-16 md:pb-0">
+      <div className="flex-1 md:pl-[250px] flex flex-col min-h-[100dvh] pb-[calc(76px+env(safe-area-inset-bottom,0px))] md:pb-0">
         <TopNav />
         <main className="flex-1">
           {children}

@@ -30,7 +30,7 @@ export function TopNav() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 w-full h-[64px] bg-canvas/90 backdrop-blur-md border-b border-hairline flex items-center justify-between px-4 md:px-8">
+    <header className="sticky top-0 z-30 w-full pt-safe h-[calc(60px+env(safe-area-inset-top,0px))] md:h-[64px] bg-canvas/90 backdrop-blur-md border-b border-hairline flex items-center justify-between px-4 md:px-8">
       {/* Kiri: Nav Tabs Desktop */}
       <div className="hidden lg:flex items-center gap-6">
         <nav className="flex items-center gap-5">
