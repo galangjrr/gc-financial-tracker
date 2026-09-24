@@ -93,9 +93,17 @@ func (h *TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if filterMonth != "" {
-		query += fmt.Sprintf(" AND TO_CHAR(t.tx_date, 'YYYY-MM') = $%d", argIdx)
-		args = append(args, filterMonth)
-		argIdx++
+		if parsedMonth, parseErr := time.Parse("2006-01", filterMonth); parseErr == nil {
+			startMonth := time.Date(parsedMonth.Year(), parsedMonth.Month(), 1, 0, 0, 0, 0, time.UTC)
+			endMonth := startMonth.AddDate(0, 1, 0)
+			query += fmt.Sprintf(" AND t.tx_date >= $%d AND t.tx_date < $%d", argIdx, argIdx+1)
+			args = append(args, startMonth.Format("2006-01-02"), endMonth.Format("2006-01-02"))
+			argIdx += 2
+		} else {
+			query += fmt.Sprintf(" AND TO_CHAR(t.tx_date, 'YYYY-MM') = $%d", argIdx)
+			args = append(args, filterMonth)
+			argIdx++
+		}
 	}
 
 	if filterSearch != "" {
