@@ -57,7 +57,33 @@ export interface DashboardSummary {
   category_spend: Record<string, number>;
 }
 
+const clientCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL_MS = 20000; // 20 detik cache segar
+
+export function clearApiCache(prefix?: string) {
+  if (!prefix) {
+    clientCache.clear();
+    return;
+  }
+  clientCache.forEach((_, key) => {
+    if (key.startsWith(prefix)) {
+      clientCache.delete(key);
+    }
+  });
+}
+
 async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const isGet = !options?.method || options.method.toUpperCase() === "GET";
+  const cacheKey = endpoint;
+
+  if (isGet) {
+    const cached = clientCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+      return cached.data as T;
+    }
+  }
+
   const url = `${API_BASE}${endpoint}`;
   const res = await fetch(url, {
     ...options,
@@ -70,6 +96,13 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const json = await res.json();
   if (!res.ok || !json.success) {
     throw new Error(json.error?.message || json.message || "Request failed");
+  }
+
+  if (isGet) {
+    clientCache.set(cacheKey, { data: json.data, timestamp: Date.now() });
+  } else {
+    // Invalidate cache on mutations
+    clearApiCache();
   }
 
   return json.data;
@@ -184,4 +217,5 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ name, pin }),
     }),
+  clearCache: clearApiCache,
 };

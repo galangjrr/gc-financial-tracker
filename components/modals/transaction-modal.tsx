@@ -50,7 +50,7 @@ export function TransactionModal({ open, setOpen }: TransactionModalProps) {
               Catat Transaksi Cepat
             </DialogTitle>
           </DialogHeader>
-          <FastTransactionForm onSuccess={() => setOpen(false)} />
+          {open && <FastTransactionForm onSuccess={() => setOpen(false)} />}
         </DialogContent>
       </Dialog>
     );
@@ -65,7 +65,7 @@ export function TransactionModal({ open, setOpen }: TransactionModalProps) {
           </DrawerTitle>
         </DrawerHeader>
         <div className="flex-1 overflow-y-auto px-4 pt-3 pb-[max(env(safe-area-inset-bottom,0px),24px)]">
-          <FastTransactionForm onSuccess={() => setOpen(false)} />
+          {open && <FastTransactionForm onSuccess={() => setOpen(false)} />}
         </div>
       </DrawerContent>
     </Drawer>

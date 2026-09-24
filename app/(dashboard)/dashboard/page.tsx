@@ -22,8 +22,29 @@ import {
 type ViewState = "ready" | "loading" | "empty" | "error";
 
 export default function DashboardPage() {
-  const [viewState, setViewState] = useState<ViewState>("loading");
-  const [data, setData] = useState<DashboardSummary | null>(null);
+  const [data, setData] = useState<DashboardSummary | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem("gc_dashboard_cache");
+        return cached ? JSON.parse(cached) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [viewState, setViewState] = useState<ViewState>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem("gc_dashboard_cache");
+        return cached ? "ready" : "loading";
+      } catch {
+        return "loading";
+      }
+    }
+    return "loading";
+  });
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -38,17 +59,25 @@ export default function DashboardPage() {
 
   const loadDashboard = async () => {
     try {
-      setViewState("loading");
+      if (!data) {
+        setViewState("loading");
+      }
       const summary = await api.getDashboard();
       setData(summary);
+      try {
+        sessionStorage.setItem("gc_dashboard_cache", JSON.stringify(summary));
+      } catch {}
+
       if (summary.wallets.length === 0 && summary.recent_transactions.length === 0) {
         setViewState("empty");
       } else {
         setViewState("ready");
       }
     } catch (err: any) {
-      setErrorMessage(err.message || "Gagal memuat ringkasan keuangan");
-      setViewState("error");
+      if (!data) {
+        setErrorMessage(err.message || "Gagal memuat ringkasan keuangan");
+        setViewState("error");
+      }
     }
   };
 
