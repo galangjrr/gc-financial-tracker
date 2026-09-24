@@ -109,6 +109,18 @@ export interface Goal {
   updated_at: string;
 }
 
+export interface ActivityLog {
+  id: string;
+  family_id: string;
+  action_type: string;
+  actor_name: string;
+  title: string;
+  details: string;
+  amount: number;
+  source_device: string;
+  created_at: string;
+}
+
 export const api = {
   getDashboard: () => request<DashboardSummary>("/dashboard"),
   
@@ -159,6 +171,11 @@ export const api = {
   createGoal: (data: Partial<Goal>) =>
     request<{ id: string }>("/goals", { method: "POST", body: JSON.stringify(data) }),
   deleteGoal: (id: string) => request(`/goals/${id}`, { method: "DELETE" }),
+
+  getActivityLogs: (actionType?: string) => {
+    const qs = actionType && actionType !== "Semua" ? `?action_type=${actionType}` : "";
+    return request<ActivityLog[]>(`/activity-logs${qs}`);
+  },
 
   login: (name: string, pin: string) =>
     request<{ id: string; display_name: string; role: string }>("/auth/login", {

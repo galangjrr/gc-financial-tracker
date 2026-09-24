@@ -77,14 +77,16 @@ func main() {
 		debtHandler := handler.NewDebtHandler(dbPool)
 		authHandler := handler.NewAuthHandler(dbPool)
 		tgHandler := handler.NewTelegramHandler(dbPool, cfg)
+		activityLogHandler := handler.NewActivityLogHandler(dbPool)
 
 		r.Route("/api", func(api chi.Router) {
 			// Auth & Family
 			api.Post("/auth/login", authHandler.Login)
 			api.Get("/auth/members", authHandler.ListMembers)
 
-			// Dashboard
+			// Dashboard & Logs
 			api.Get("/dashboard", dashHandler.GetSummary)
+			api.Get("/activity-logs", activityLogHandler.List)
 
 			// Wallets
 			api.Route("/wallets", func(w chi.Router) {

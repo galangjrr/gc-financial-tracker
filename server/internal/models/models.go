@@ -133,3 +133,15 @@ type DashboardSummary struct {
 	Debts              []Debt                 `json:"debts"`
 	CategorySpend      map[string]float64     `json:"category_spend"`
 }
+
+type ActivityLog struct {
+	ID           uuid.UUID `json:"id"`
+	FamilyID     uuid.UUID `json:"family_id"`
+	ActionType   string    `json:"action_type"`
+	ActorName    string    `json:"actor_name"`
+	Title        string    `json:"title"`
+	Details      string    `json:"details"`
+	Amount       float64   `json:"amount"`
+	SourceDevice string    `json:"source_device"`
+	CreatedAt    time.Time `json:"created_at"`
+}

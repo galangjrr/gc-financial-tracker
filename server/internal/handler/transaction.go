@@ -189,6 +189,19 @@ func (h *TransactionHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	actorName := "Keluarga"
+	if input.CreatedBy != "" {
+		actorName = input.CreatedBy
+	}
+	details := input.Notes
+	if details == "" {
+		details = input.Type
+	}
+	h.pool.Exec(ctx, `
+		INSERT INTO activity_logs (family_id, action_type, actor_name, title, details, amount, source_device, created_at)
+		VALUES ($1, 'transaction_created', $2, $3, $4, $5, 'Web_App', NOW())
+	`, familyID, actorName, "Catat "+input.Type, details, input.Amount)
+
 	RespondSuccessMessage(w, http.StatusCreated, "Transaksi berhasil disimpan", map[string]interface{}{
 		"id": newID,
 	})
@@ -248,6 +261,15 @@ func (h *TransactionHandler) CreateTransfer(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	actorName := "Keluarga"
+	if input.CreatedBy != "" {
+		actorName = input.CreatedBy
+	}
+	h.pool.Exec(ctx, `
+		INSERT INTO activity_logs (family_id, action_type, actor_name, title, details, amount, source_device, created_at)
+		VALUES ($1, 'transfer_created', $2, 'Transfer Saldo', $3, $4, 'Web_App', NOW())
+	`, familyID, actorName, input.Notes, input.Amount)
+
 	RespondSuccessMessage(w, http.StatusCreated, "Transfer antar dompet berhasil dicatat", map[string]interface{}{
 		"id": newID,
 	})
@@ -261,6 +283,12 @@ func (h *TransactionHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		RespondError(w, http.StatusBadRequest, "INVALID_TRANSACTION_ID", "ID transaksi tidak valid")
 		return
 	}
+
+	familyIDStr := r.URL.Query().Get("family_id")
+	if familyIDStr == "" {
+		familyIDStr = "00000000-0000-0000-0000-000000000001"
+	}
+	familyID, _ := uuid.Parse(familyIDStr)
 
 	tag, err := h.pool.Exec(ctx, `
 		UPDATE transactions 
@@ -277,6 +305,11 @@ func (h *TransactionHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		RespondError(w, http.StatusNotFound, "NOT_FOUND", "Transaksi tidak ditemukan")
 		return
 	}
+
+	h.pool.Exec(ctx, `
+		INSERT INTO activity_logs (family_id, action_type, actor_name, title, details, amount, source_device, created_at)
+		VALUES ($1, 'transaction_deleted', 'Keluarga', 'Hapus Transaksi', 'Transaksi dibatalkan atau dihapus', 0, 'Web_App', NOW())
+	`, familyID)
 
 	RespondSuccessMessage(w, http.StatusOK, "Transaksi berhasil dihapus", nil)
 }

@@ -83,6 +83,7 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
   const [walletSourceId, setWalletSourceId] = useState("");
   const [walletDestId, setWalletDestId] = useState("");
   const [notes, setNotes] = useState("");
+  const [showCustomDate, setShowCustomDate] = useState(false);
   
   // Biaya parkir opsional
   const [hasParking, setHasParking] = useState(false);
@@ -355,40 +356,40 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       )}
 
-      {/* 4. Baris Sejajar: Dompet Sumber + Tanggal (Hemat Tempat) */}
-      <div className="grid grid-cols-2 gap-2">
-        {/* Dompet Sumber */}
-        <div className="bg-surface-card p-2.5 rounded-[16px] border border-hairline flex items-center gap-2">
-          <div className="w-7 h-7 rounded-[10px] bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
-            <WalletIcon className="w-3.5 h-3.5 text-ink" />
+      {/* 4. Pilihan Dompet (Otomatis Real-time Tanpa Ribet Input Tanggal) */}
+      {activeTab === "Transfer" ? (
+        <div className="grid grid-cols-2 gap-2">
+          {/* Dari Dompet */}
+          <div className="bg-surface-card p-2.5 rounded-[16px] border border-hairline flex items-center gap-2">
+            <div className="w-7 h-7 rounded-[10px] bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
+              <WalletIcon className="w-3.5 h-3.5 text-ink" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="block text-[10px] text-mute font-bold leading-none mb-1">
+                Dari Dompet
+              </span>
+              <select
+                value={walletSourceId}
+                onChange={(e) => setWalletSourceId(e.target.value)}
+                className="w-full bg-transparent text-ink text-xs font-bold focus:outline-none appearance-none cursor-pointer border-none p-0 truncate"
+              >
+                {wallets.map((w) => (
+                  <option key={w.id} value={w.id} className="bg-canvas text-ink">
+                    {w.wallet_name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <span className="block text-[10px] text-mute font-bold leading-none mb-1">
-              {activeTab === "Transfer" ? "Dari" : "Dompet"}
-            </span>
-            <select
-              value={walletSourceId}
-              onChange={(e) => setWalletSourceId(e.target.value)}
-              className="w-full bg-transparent text-ink text-xs font-bold focus:outline-none appearance-none cursor-pointer border-none p-0 truncate"
-            >
-              {wallets.map((w) => (
-                <option key={w.id} value={w.id} className="bg-canvas text-ink">
-                  {w.wallet_name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
 
-        {/* Tanggal atau Dompet Tujuan jika Transfer */}
-        {activeTab === "Transfer" ? (
+          {/* Ke Dompet */}
           <div className="bg-surface-card p-2.5 rounded-[16px] border border-hairline flex items-center gap-2">
             <div className="w-7 h-7 rounded-[10px] bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
               <ArrowRightLeft className="w-3.5 h-3.5 text-ink" />
             </div>
             <div className="flex-1 min-w-0">
               <span className="block text-[10px] text-mute font-bold leading-none mb-1">
-                Ke
+                Ke Dompet
               </span>
               <select
                 value={walletDestId}
@@ -403,25 +404,56 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
               </select>
             </div>
           </div>
-        ) : (
-          <div className="bg-surface-card p-2.5 rounded-[16px] border border-hairline flex items-center gap-2">
-            <div className="w-7 h-7 rounded-[10px] bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
-              <Calendar className="w-3.5 h-3.5 text-ink" />
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          <div className="bg-surface-card p-2.5 rounded-[16px] border border-hairline flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+              <div className="w-7 h-7 rounded-[10px] bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
+                <WalletIcon className="w-3.5 h-3.5 text-ink" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="block text-[10px] text-mute font-bold leading-none mb-1">
+                  Pakai Dompet
+                </span>
+                <select
+                  value={walletSourceId}
+                  onChange={(e) => setWalletSourceId(e.target.value)}
+                  className="w-full bg-transparent text-ink text-xs font-bold focus:outline-none appearance-none cursor-pointer border-none p-0 truncate"
+                >
+                  {wallets.map((w) => (
+                    <option key={w.id} value={w.id} className="bg-canvas text-ink">
+                      {w.wallet_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <span className="block text-[10px] text-mute font-bold leading-none mb-1">
-                Tanggal
-              </span>
+
+            <button
+              type="button"
+              onClick={() => setShowCustomDate(!showCustomDate)}
+              className="px-2.5 py-1.5 bg-canvas hover:bg-secondary-bg border border-hairline rounded-full text-[11px] font-semibold text-mute hover:text-ink shrink-0 transition-colors flex items-center gap-1"
+            >
+              <Calendar className="w-3 h-3" />
+              <span>{showCustomDate ? "Batal" : "Ganti Tanggal"}</span>
+            </button>
+          </div>
+
+          {/* Opsi Ubah Tanggal Lampau (Hanya jika dibutuhkan) */}
+          {showCustomDate && (
+            <div className="p-2 bg-secondary-bg/40 rounded-[12px] border border-hairline flex items-center gap-2 animate-in fade-in duration-150">
+              <span className="text-[11px] font-semibold text-mute shrink-0">Tanggal Lampau:</span>
               <input
                 type="date"
                 value={txDate}
                 onChange={(e) => setTxDate(e.target.value)}
-                className="w-full bg-transparent text-ink text-xs font-bold focus:outline-none border-none p-0 cursor-pointer"
+                className="w-full bg-canvas text-ink text-xs font-bold p-1 rounded-[8px] border border-hairline focus:outline-none"
               />
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* 5. Catatan Kecil + Opsi Cepat Parkir Sejajar */}
       <div className="flex items-center gap-2">

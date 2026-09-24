@@ -14,6 +14,7 @@ import {
   ReceiptText,
   PieChart,
   Wallet,
+  Activity,
   HelpCircle,
   LogOut,
 } from "lucide-react";
@@ -21,6 +22,7 @@ import Image from "next/image";
 
 const NAV_ITEMS = [
   { name: "Beranda", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Log Tracker", href: "/logs", icon: Activity },
   { name: "Pantau Duit", href: "/analytics", icon: LineChart },
   { name: "Laporan", href: "/reports", icon: FileText },
   { name: "Nabung", href: "/goals", icon: Target },
