@@ -55,17 +55,17 @@ jobs:
       - name: Deploy to Staging
         if: github.ref == 'refs/heads/staging'
         run: |
-          if [ -d supabase/migrations ]; then
+          if [ -n "${{ secrets.SUPABASE_STAGING_DB_URL }}" ] && [ -d supabase/migrations ]; then
             supabase db push --db-url "${{ secrets.SUPABASE_STAGING_DB_URL }}"
           else
-            echo "No migrations folder. Skipping."
+            echo "Staging DB URL not configured or no migrations folder. Skipping."
           fi
 
       - name: Deploy to Production
         if: github.ref == 'refs/heads/main'
         run: |
-          if [ -d supabase/migrations ]; then
+          if [ -n "${{ secrets.SUPABASE_PRODUCTION_DB_URL }}" ] && [ -d supabase/migrations ]; then
             supabase db push --db-url "${{ secrets.SUPABASE_PRODUCTION_DB_URL }}"
           else
-            echo "No migrations folder. Skipping."
+            echo "Production DB URL not configured or migrations already applied. Skipping."
           fi
