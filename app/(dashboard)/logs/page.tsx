@@ -5,7 +5,7 @@ import { PageShell } from "@/components/shared/page-shell";
 import { EmptyState } from "@/components/shared/empty-state";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { api, ActivityLog } from "@/lib/api";
-import { formatRupiah } from "@/lib/utils";
+import { formatRupiah, formatRealtime } from "@/lib/utils";
 import {
   Activity,
   Search,
@@ -104,15 +104,7 @@ export default function LogsPage() {
 
   const formatTimestamp = (isoString: string) => {
     try {
-      const d = new Date(isoString);
-      return d.toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      }) + " WIB";
+      return formatRealtime(isoString);
     } catch {
       return isoString;
     }

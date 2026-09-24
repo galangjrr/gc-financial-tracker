@@ -5,7 +5,7 @@ import { PageShell } from "@/components/shared/page-shell";
 import { EmptyState } from "@/components/shared/empty-state";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { api, Transaction } from "@/lib/api";
-import { formatRupiah } from "@/lib/utils";
+import { formatRupiah, formatRealtime } from "@/lib/utils";
 import {
   ReceiptText,
   TrendingUp,
@@ -227,7 +227,7 @@ export default function TransactionsPage() {
                           </span>
                         </div>
                         <p className="text-xs text-mute truncate mt-0.5">
-                          {tx.tx_date} • {tx.wallet_source_name || "Cash"}
+                          {formatRealtime(tx.created_at || tx.tx_date)} • {tx.wallet_source_name || "Cash"}
                           {tx.notes ? ` • ${tx.notes}` : ""}
                         </p>
                       </div>

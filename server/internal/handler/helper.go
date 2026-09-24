@@ -3,9 +3,15 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"gc-financial-tracker/server/internal/models"
 )
+
+func NowWIB() time.Time {
+	loc := time.FixedZone("WIB", 7*3600)
+	return time.Now().In(loc)
+}
 
 func RespondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")

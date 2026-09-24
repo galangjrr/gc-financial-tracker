@@ -15,6 +15,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { api, Wallet, Category } from "@/lib/api";
+import { getLocalISODate } from "@/lib/utils";
 import {
   Calendar,
   Wallet as WalletIcon,
@@ -78,7 +79,7 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
   const [showMoreTabs, setShowMoreTabs] = useState(false);
   const [displayAmount, setDisplayAmount] = useState("");
   const [rawAmount, setRawAmount] = useState(0);
-  const [txDate, setTxDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [txDate, setTxDate] = useState(() => getLocalISODate());
   const [categoryId, setCategoryId] = useState("");
   const [walletSourceId, setWalletSourceId] = useState("");
   const [walletDestId, setWalletDestId] = useState("");

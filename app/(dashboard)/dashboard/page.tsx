@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { FinancialTrendChart } from "@/components/shared/financial-trend-chart";
 import { api, DashboardSummary } from "@/lib/api";
-import { formatRupiah } from "@/lib/utils";
+import { formatRupiah, formatRealtime } from "@/lib/utils";
 import {
   Wallet as WalletIcon,
   TrendingUp,
@@ -251,7 +251,7 @@ export default function DashboardPage() {
                                 {tx.category_name || tx.type}
                               </p>
                               <p className="text-[11px] text-mute">
-                                {tx.tx_date} • {tx.wallet_source_name || "Cash"}
+                                {formatRealtime(tx.created_at || tx.tx_date)} • {tx.wallet_source_name || "Cash"}
                                 {tx.notes ? ` • ${tx.notes}` : ""}
                               </p>
                             </div>

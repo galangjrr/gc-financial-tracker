@@ -161,7 +161,7 @@ func (h *TransactionHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if input.TxDate == "" {
-		input.TxDate = time.Now().Format("2006-01-02")
+		input.TxDate = NowWIB().Format("2006-01-02")
 	}
 
 	familyIDStr := r.URL.Query().Get("family_id")
@@ -234,7 +234,7 @@ func (h *TransactionHandler) CreateTransfer(w http.ResponseWriter, r *http.Reque
 	}
 
 	if input.TxDate == "" {
-		input.TxDate = time.Now().Format("2006-01-02")
+		input.TxDate = NowWIB().Format("2006-01-02")
 	}
 
 	familyIDStr := r.URL.Query().Get("family_id")
