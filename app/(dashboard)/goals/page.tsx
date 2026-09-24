@@ -52,37 +52,37 @@ export default function GoalsPage() {
 
       <div className="space-y-6">
         {/* KPI Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <div className="bg-surface-card p-4 rounded-[16px] border border-hairline">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-full">
+          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
               TOTAL GOALS
             </p>
-            <p className="text-2xl font-bold text-ink">{goals.length}</p>
+            <p className="text-xl sm:text-2xl font-bold text-ink truncate">{goals.length}</p>
           </div>
-          <div className="bg-surface-card p-4 rounded-[16px] border border-emerald-500/60">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-emerald-500/60 min-w-0 overflow-hidden">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
               TOTAL TARGET
             </p>
-            <p className="text-xl md:text-2xl font-bold text-emerald-600 truncate">
+            <p className="text-base sm:text-xl md:text-2xl font-bold text-emerald-600 truncate">
               {formatRupiah(totalTarget)}
             </p>
           </div>
-          <div className="bg-surface-card p-4 rounded-[16px] border border-hairline col-span-2 md:col-span-1">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline col-span-2 md:col-span-1 min-w-0 overflow-hidden">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
               TOTAL TERKUMPUL
             </p>
-            <p className="text-xl md:text-2xl font-bold text-ink truncate">
+            <p className="text-base sm:text-xl md:text-2xl font-bold text-ink truncate">
               {formatRupiah(totalSaved)}
             </p>
           </div>
         </div>
 
         {/* Action Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full max-w-full">
           <h3 className="font-bold text-ink text-base">Daftar Impian</h3>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="h-10 px-4 rounded-full bg-[#e60023] hover:bg-[#cc001f] text-white font-bold flex items-center justify-center gap-1.5 text-xs shadow-[0_4px_12px_rgba(230,0,35,0.2)] transition-all"
+            className="h-10 px-4 rounded-full bg-[#e60023] hover:bg-[#cc001f] text-white font-bold flex items-center justify-center gap-1.5 text-xs shadow-[0_4px_12px_rgba(230,0,35,0.2)] transition-all shrink-0 self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" /> Tambah Goal Baru
           </button>

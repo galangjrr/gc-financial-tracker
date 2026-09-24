@@ -15,12 +15,12 @@ const data = [
 
 export function FinancialTrendChart() {
   return (
-    <div className="bg-canvas border border-hairline rounded-[32px] p-8 w-full h-[350px]">
-      <div className="mb-6">
-        <h3 className="font-semibold text-ink text-[22px]">Tren Keuangan (Juli)</h3>
-        <p className="text-mute text-[14px]">Pemasukan vs Pengeluaran</p>
+    <div className="bg-canvas border border-hairline rounded-[24px] md:rounded-[32px] p-4 sm:p-8 w-full max-w-full min-w-0 overflow-hidden h-[340px]">
+      <div className="mb-4 sm:mb-6">
+        <h3 className="font-semibold text-ink text-[18px] sm:text-[22px] truncate">Tren Keuangan</h3>
+        <p className="text-mute text-xs sm:text-[14px]">Pemasukan vs Pengeluaran</p>
       </div>
-      <div className="h-[220px] w-full">
+      <div className="h-[210px] w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
             <defs>

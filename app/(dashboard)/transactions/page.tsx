@@ -156,7 +156,7 @@ export default function TransactionsPage() {
         </div>
 
         {/* Filter Chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-hide w-full max-w-full min-w-0">
           {FILTER_TYPES.map((type) => {
             const active = selectedType === type;
             return (

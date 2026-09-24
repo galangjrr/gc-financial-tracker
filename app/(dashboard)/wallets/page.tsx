@@ -65,25 +65,25 @@ export default function WalletsPage() {
       ) : (
         <div className="space-y-6">
           {/* Header Card Saldo Aktif */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface-card border border-hairline rounded-[24px] p-6">
-            <div>
-              <p className="text-mute text-xs font-bold uppercase tracking-wider mb-1">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface-card border border-hairline rounded-[24px] p-4 sm:p-6 w-full max-w-full min-w-0 overflow-hidden">
+            <div className="min-w-0">
+              <p className="text-mute text-xs font-bold uppercase tracking-wider mb-1 truncate">
                 TOTAL SALDO AKTIF
               </p>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-ink leading-none">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-ink leading-none truncate">
                 {formatRupiah(totalBalance)}
               </h2>
             </div>
-            <div className="flex gap-2 self-start md:self-auto">
+            <div className="flex flex-wrap gap-2 self-stretch sm:self-start md:self-auto">
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent("open-tx-modal"))}
-                className="h-10 px-4 rounded-full bg-secondary-bg hover:bg-hairline text-ink font-bold flex items-center justify-center gap-2 text-xs transition-colors"
+                className="flex-1 sm:flex-initial h-10 px-4 rounded-full bg-secondary-bg hover:bg-hairline text-ink font-bold flex items-center justify-center gap-2 text-xs transition-colors shrink-0"
               >
                 <ArrowRightLeft className="w-3.5 h-3.5" /> Transfer
               </button>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="h-10 px-5 rounded-full bg-[#e60023] hover:bg-[#cc001f] text-white font-bold flex items-center justify-center gap-2 text-xs shadow-[0_4px_12px_rgba(230,0,35,0.2)] transition-all"
+                className="flex-1 sm:flex-initial h-10 px-4 rounded-full bg-[#e60023] hover:bg-[#cc001f] text-white font-bold flex items-center justify-center gap-2 text-xs shadow-[0_4px_12px_rgba(230,0,35,0.2)] transition-all shrink-0"
               >
                 <Plus className="w-4 h-4" /> Tambah Rekening
               </button>

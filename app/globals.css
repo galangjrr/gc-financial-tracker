@@ -59,8 +59,12 @@
 @layer base {
   * {
     border-color: var(--color-border);
+    box-sizing: border-box;
   }
   html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
     background-color: var(--color-background);
     color: var(--color-foreground);
     -webkit-font-smoothing: antialiased;

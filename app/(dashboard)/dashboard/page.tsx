@@ -81,43 +81,43 @@ export default function DashboardPage() {
       {viewState === "ready" && data && (
         <div className="space-y-6">
           {/* 4 KPI Summary Cards sesuai UI Klasik GC Finance */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-full">
             {/* Total Kekayaan */}
-            <div className="bg-surface-card p-4 rounded-[16px] border border-hairline transition-all hover:-translate-y-0.5 hover:shadow-sm">
-              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+            <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-sm">
+              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
                 TOTAL KEKAYAAN
               </p>
-              <h3 className="text-xl md:text-2xl font-bold text-ink truncate">
+              <h3 className="text-base sm:text-xl md:text-2xl font-bold text-ink truncate">
                 {formatRupiah(data.net_worth)}
               </h3>
             </div>
 
             {/* Pemasukan Bulan Ini */}
-            <div className="bg-surface-card p-4 rounded-[16px] border border-emerald-500/60 transition-all hover:-translate-y-0.5 hover:shadow-sm">
-              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+            <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-emerald-500/60 min-w-0 overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-sm">
+              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
                 UANG MASUK BULAN INI
               </p>
-              <h3 className="text-xl md:text-2xl font-bold text-emerald-600 truncate">
+              <h3 className="text-base sm:text-xl md:text-2xl font-bold text-emerald-600 truncate">
                 {formatRupiah(data.total_income)}
               </h3>
             </div>
 
             {/* Pengeluaran Bulan Ini */}
-            <div className="bg-surface-card p-4 rounded-[16px] border border-rose-500/60 transition-all hover:-translate-y-0.5 hover:shadow-sm">
-              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+            <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-rose-500/60 min-w-0 overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-sm">
+              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
                 UANG KELUAR BULAN INI
               </p>
-              <h3 className="text-xl md:text-2xl font-bold text-rose-600 truncate">
+              <h3 className="text-base sm:text-xl md:text-2xl font-bold text-rose-600 truncate">
                 {formatRupiah(data.total_expense)}
               </h3>
             </div>
 
             {/* Rasio Nabung */}
-            <div className="bg-surface-card p-4 rounded-[16px] border border-hairline transition-all hover:-translate-y-0.5 hover:shadow-sm">
-              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+            <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-sm">
+              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
                 PORSI NABUNG
               </p>
-              <h3 className="text-xl md:text-2xl font-bold text-ink mb-1">
+              <h3 className="text-base sm:text-xl md:text-2xl font-bold text-ink mb-1 truncate">
                 {Math.round(data.savings_ratio)}%
               </h3>
               <div className="w-full bg-secondary-bg rounded-full h-1.5 mt-2 border border-hairline overflow-hidden">
@@ -236,9 +236,9 @@ export default function DashboardPage() {
                       return (
                         <div
                           key={tx.id}
-                          className="flex items-center justify-between p-3 bg-canvas rounded-[14px] border border-hairline/60"
+                          className="flex items-center justify-between p-3 bg-canvas rounded-[14px] border border-hairline/60 min-w-0 max-w-full overflow-hidden"
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div
                               className={`w-8 h-8 rounded-full ${
                                 isIncome ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"
@@ -246,11 +246,11 @@ export default function DashboardPage() {
                             >
                               {isIncome ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                             </div>
-                            <div>
-                              <p className="font-semibold text-ink text-xs">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-ink text-xs truncate">
                                 {tx.category_name || tx.type}
                               </p>
-                              <p className="text-[11px] text-mute">
+                              <p className="text-[11px] text-mute truncate">
                                 {formatRealtime(tx.created_at || tx.tx_date)} • {tx.wallet_source_name || "Cash"}
                                 {tx.notes ? ` • ${tx.notes}` : ""}
                               </p>

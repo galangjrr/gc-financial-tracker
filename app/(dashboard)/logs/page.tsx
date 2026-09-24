@@ -188,15 +188,15 @@ export default function LogsPage() {
                 return (
                   <div
                     key={log.id}
-                    className="p-4 bg-canvas rounded-[18px] border border-hairline/80 flex flex-col md:flex-row md:items-center justify-between gap-3 transition-all hover:border-hairline"
+                    className="p-4 bg-canvas rounded-[18px] border border-hairline/80 flex flex-col md:flex-row md:items-center justify-between gap-3 transition-all hover:border-hairline min-w-0 max-w-full overflow-hidden"
                   >
-                    <div className="flex items-start gap-3.5 min-w-0">
+                    <div className="flex items-start gap-3.5 min-w-0 flex-1">
                       <div className={`w-10 h-10 rounded-[14px] flex items-center justify-center shrink-0 border ${badge.color}`}>
                         <BadgeIcon className="w-5 h-5" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <h4 className="font-bold text-sm text-ink">{log.title}</h4>
+                          <h4 className="font-bold text-sm text-ink truncate">{log.title}</h4>
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${badge.color}`}>
                             {badge.label}
                           </span>
@@ -204,7 +204,7 @@ export default function LogsPage() {
                             <User className="w-3 h-3 text-mute" /> {log.actor_name}
                           </span>
                         </div>
-                        <p className="text-xs text-body font-medium leading-relaxed">
+                        <p className="text-xs text-body font-medium leading-relaxed break-words">
                           {log.details}
                         </p>
                         {log.amount > 0 && (
@@ -215,7 +215,7 @@ export default function LogsPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center md:flex-col items-start md:items-end justify-between border-t md:border-t-0 pt-2 md:pt-0 border-hairline/50 text-[11px] text-mute shrink-0">
+                    <div className="flex items-center md:flex-col items-start md:items-end justify-between border-t md:border-t-0 pt-2 md:pt-0 border-hairline/50 text-[11px] text-mute shrink-0 min-w-0">
                       <div className="flex items-center gap-1.5 font-semibold text-ink">
                         <Clock className="w-3.5 h-3.5 text-mute" />
                         <span>{formatTimestamp(log.created_at)}</span>

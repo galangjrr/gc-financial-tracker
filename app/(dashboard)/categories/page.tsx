@@ -44,7 +44,7 @@ export default function CategoriesPage() {
 
       <div className="space-y-6">
         {/* Segment Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-hide w-full max-w-full min-w-0">
           {SEGMENTS.map((seg) => {
             const active = activeSegment === seg;
             const count = (categoriesBySegment[seg] || []).length;

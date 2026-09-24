@@ -62,51 +62,51 @@ export default function DebtsPage() {
       <div className="space-y-6">
         {/* 4 Summary Cards Klasik GC Finance */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-surface-card p-4 rounded-[16px] border border-hairline">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
               TOTAL UTANG
             </p>
-            <h3 className="text-xl font-bold text-rose-600 truncate">
+            <h3 className="text-base sm:text-xl font-bold text-rose-600 truncate">
               {formatRupiah(totalUtang)}
             </h3>
           </div>
 
-          <div className="bg-surface-card p-4 rounded-[16px] border border-hairline">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
               TOTAL PIUTANG
             </p>
-            <h3 className="text-xl font-bold text-emerald-600 truncate">
+            <h3 className="text-base sm:text-xl font-bold text-emerald-600 truncate">
               {formatRupiah(totalPiutang)}
             </h3>
           </div>
 
-          <div className="bg-surface-card p-4 rounded-[16px] border border-hairline">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
               SISA UTANG
             </p>
-            <h3 className="text-xl font-bold text-rose-600 truncate">
+            <h3 className="text-base sm:text-xl font-bold text-rose-600 truncate">
               {formatRupiah(sisaUtang)}
             </h3>
           </div>
 
-          <div className="bg-surface-card p-4 rounded-[16px] border border-hairline">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1">
+          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden">
+            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
               SISA PIUTANG
             </p>
-            <h3 className="text-xl font-bold text-emerald-600 truncate">
+            <h3 className="text-base sm:text-xl font-bold text-emerald-600 truncate">
               {formatRupiah(sisaPiutang)}
             </h3>
           </div>
         </div>
 
         {/* Filter Bar */}
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full max-w-full">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide py-0.5 max-w-full min-w-0">
             {(["Semua", "Utang", "Piutang"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setFilterType(t)}
-                className={`px-4 py-1.5 rounded-full font-bold text-xs transition-colors ${
+                className={`px-3.5 py-1.5 rounded-full font-bold text-xs shrink-0 transition-colors ${
                   filterType === t
                     ? "bg-ink text-canvas shadow-sm"
                     : "bg-surface-card text-mute hover:text-ink hover:bg-secondary-bg border border-hairline"
@@ -119,7 +119,7 @@ export default function DebtsPage() {
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="h-10 px-4 rounded-full bg-[#e60023] hover:bg-[#cc001f] text-white font-bold flex items-center justify-center gap-1.5 text-xs shadow-[0_4px_12px_rgba(230,0,35,0.2)] transition-all"
+            className="h-10 px-4 rounded-full bg-[#e60023] hover:bg-[#cc001f] text-white font-bold flex items-center justify-center gap-1.5 text-xs shadow-[0_4px_12px_rgba(230,0,35,0.2)] transition-all shrink-0 self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" /> Catat Baru
           </button>
@@ -145,9 +145,9 @@ export default function DebtsPage() {
               return (
                 <div
                   key={item.id}
-                  className="bg-surface-card border border-hairline rounded-[20px] p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+                  className="bg-surface-card border border-hairline rounded-[20px] p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 group min-w-0 max-w-full overflow-hidden"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
                     <div
                       className={`w-11 h-11 rounded-full ${
                         isPiutang ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
@@ -155,9 +155,9 @@ export default function DebtsPage() {
                     >
                       <Handshake className="w-5 h-5" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-ink text-base">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4 className="font-bold text-ink text-base truncate">
                           {item.person}
                         </h4>
                         <span
@@ -179,7 +179,7 @@ export default function DebtsPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-mute mt-1">
+                      <p className="text-xs text-mute mt-1 truncate">
                         {item.debt_date} • {item.notes || "Tanpa catatan"}
                       </p>
                     </div>

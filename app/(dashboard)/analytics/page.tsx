@@ -33,28 +33,28 @@ export default function AnalyticsPage() {
         <div className="space-y-6">
           <FinancialTrendChart />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <section className="bg-canvas border border-hairline rounded-[32px] p-8">
-              <h3 className="font-semibold text-ink text-[22px] mb-6">Ringkasan Bulan Ini</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-4 bg-surface-card rounded-[16px]">
-                  <span className="font-semibold text-ink">Total Pemasukan</span>
-                  <span className="font-bold text-financial-income">+Rp 12.000.000</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-full">
+            <section className="bg-canvas border border-hairline rounded-[24px] md:rounded-[32px] p-5 sm:p-8 min-w-0 max-w-full overflow-hidden">
+              <h3 className="font-semibold text-ink text-[18px] sm:text-[22px] mb-4 sm:mb-6">Ringkasan Bulan Ini</h3>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex justify-between items-center p-3.5 sm:p-4 bg-surface-card rounded-[16px] min-w-0 gap-2">
+                  <span className="font-semibold text-ink text-xs sm:text-sm truncate">Total Pemasukan</span>
+                  <span className="font-bold text-financial-income text-xs sm:text-sm shrink-0">+Rp 12.000.000</span>
                 </div>
-                <div className="flex justify-between items-center p-4 bg-surface-card rounded-[16px]">
-                  <span className="font-semibold text-ink">Total Pengeluaran</span>
-                  <span className="font-bold text-financial-expense">-Rp 4.500.000</span>
+                <div className="flex justify-between items-center p-3.5 sm:p-4 bg-surface-card rounded-[16px] min-w-0 gap-2">
+                  <span className="font-semibold text-ink text-xs sm:text-sm truncate">Total Pengeluaran</span>
+                  <span className="font-bold text-financial-expense text-xs sm:text-sm shrink-0">-Rp 4.500.000</span>
                 </div>
-                <div className="flex justify-between items-center p-4 bg-surface-card rounded-[16px]">
-                  <span className="font-semibold text-ink">Total Tabungan</span>
-                  <span className="font-bold text-financial-savings">Rp 1.000.000</span>
+                <div className="flex justify-between items-center p-3.5 sm:p-4 bg-surface-card rounded-[16px] min-w-0 gap-2">
+                  <span className="font-semibold text-ink text-xs sm:text-sm truncate">Total Tabungan</span>
+                  <span className="font-bold text-financial-savings text-xs sm:text-sm shrink-0">Rp 1.000.000</span>
                 </div>
               </div>
             </section>
             
-            <section className="bg-canvas border border-hairline rounded-[32px] p-8">
-              <h3 className="font-semibold text-ink text-[22px] mb-6">Alokasi Top 3</h3>
-              <div className="space-y-6">
+            <section className="bg-canvas border border-hairline rounded-[24px] md:rounded-[32px] p-5 sm:p-8 min-w-0 max-w-full overflow-hidden">
+              <h3 className="font-semibold text-ink text-[18px] sm:text-[22px] mb-4 sm:mb-6">Alokasi Top 3</h3>
+              <div className="space-y-5 sm:space-y-6">
                 {[
                   { label: "Makan & Minum", amount: "Rp 1.700.000", pct: 37, color: "bg-financial-expense" },
                   { label: "Cicilan Kendaraan", amount: "Rp 1.500.000", pct: 33, color: "bg-financial-bill" },
