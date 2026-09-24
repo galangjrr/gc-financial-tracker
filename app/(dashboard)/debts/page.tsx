@@ -59,151 +59,169 @@ export default function DebtsPage() {
     >
       <DebtModal open={isModalOpen} setOpen={setIsModalOpen} />
 
-      <div className="space-y-6">
-        {/* 4 Summary Cards Klasik GC Finance */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
+      <div className="space-y-6 w-full max-w-full min-w-0">
+        {/* 4 Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-full">
+          <div className="bg-surface-card p-4 rounded-2xl border border-hairline min-w-0 overflow-hidden">
+            <p className="text-[11px] text-mute font-bold tracking-wider uppercase mb-1.5 truncate">
               TOTAL UTANG
             </p>
-            <h3 className="text-base sm:text-xl font-bold text-rose-600 truncate">
+            <h3 className="text-base sm:text-xl font-bold text-rose-600 tabular-nums truncate tracking-tight">
               {formatRupiah(totalUtang)}
             </h3>
           </div>
 
-          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
+          <div className="bg-surface-card p-4 rounded-2xl border border-hairline min-w-0 overflow-hidden">
+            <p className="text-[11px] text-mute font-bold tracking-wider uppercase mb-1.5 truncate">
               TOTAL PIUTANG
             </p>
-            <h3 className="text-base sm:text-xl font-bold text-emerald-600 truncate">
+            <h3 className="text-base sm:text-xl font-bold text-emerald-600 tabular-nums truncate tracking-tight">
               {formatRupiah(totalPiutang)}
             </h3>
           </div>
 
-          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
+          <div className="bg-surface-card p-4 rounded-2xl border border-rose-500/30 min-w-0 overflow-hidden">
+            <p className="text-[11px] text-rose-700 font-bold tracking-wider uppercase mb-1.5 truncate">
               SISA UTANG
             </p>
-            <h3 className="text-base sm:text-xl font-bold text-rose-600 truncate">
+            <h3 className="text-base sm:text-xl font-bold text-rose-600 tabular-nums truncate tracking-tight">
               {formatRupiah(sisaUtang)}
             </h3>
           </div>
 
-          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
+          <div className="bg-surface-card p-4 rounded-2xl border border-emerald-500/30 min-w-0 overflow-hidden">
+            <p className="text-[11px] text-emerald-700 font-bold tracking-wider uppercase mb-1.5 truncate">
               SISA PIUTANG
             </p>
-            <h3 className="text-base sm:text-xl font-bold text-emerald-600 truncate">
+            <h3 className="text-base sm:text-xl font-bold text-emerald-600 tabular-nums truncate tracking-tight">
               {formatRupiah(sisaPiutang)}
             </h3>
           </div>
         </div>
 
-        {/* Filter Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full max-w-full">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide py-0.5 max-w-full min-w-0">
-            {(["Semua", "Utang", "Piutang"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setFilterType(t)}
-                className={`px-3.5 py-1.5 rounded-full font-bold text-xs shrink-0 transition-colors ${
-                  filterType === t
-                    ? "bg-ink text-canvas shadow-sm"
-                    : "bg-surface-card text-mute hover:text-ink hover:bg-secondary-bg border border-hairline"
-                }`}
-              >
-                {t === "Semua" ? "Semua" : `Hanya ${t}`}
-              </button>
-            ))}
+        {/* Action & Filter Bar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full max-w-full min-w-0">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide flex-1 min-w-0">
+            {(["Semua", "Utang", "Piutang"] as const).map((t) => {
+              const active = filterType === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setFilterType(t)}
+                  aria-pressed={active}
+                  className={`px-4 py-2 rounded-full text-xs font-bold shrink-0 transition-all active:scale-95 ${
+                    active
+                      ? "bg-ink text-canvas shadow-xs"
+                      : "bg-surface-card text-mute hover:text-ink hover:bg-secondary-bg border border-hairline"
+                  }`}
+                >
+                  {t}
+                </button>
+              );
+            })}
           </div>
 
           <button
+            type="button"
             onClick={() => setIsModalOpen(true)}
-            className="h-10 px-4 rounded-full bg-[#e60023] hover:bg-[#cc001f] text-white font-bold flex items-center justify-center gap-1.5 text-xs shadow-[0_4px_12px_rgba(230,0,35,0.2)] transition-all shrink-0 self-start sm:self-auto"
+            className="h-10 px-4 rounded-full bg-primary hover:bg-primary-pressed text-primary-foreground font-bold flex items-center justify-center gap-1.5 text-xs shadow-[0_4px_12px_rgba(230,0,35,0.22)] transition-all shrink-0 self-start sm:self-auto active:scale-95"
           >
-            <Plus className="w-4 h-4" /> Catat Baru
+            <Plus className="w-4 h-4" aria-hidden="true" />
+            <span>Tambah Catatan</span>
           </button>
         </div>
 
-        {/* Content */}
+        {/* Debts List */}
         {loading ? (
           <DashboardSkeleton />
         ) : filteredDebts.length === 0 ? (
           <EmptyState
             icon={Handshake}
             title="Tidak Ada Catatan Utang"
-            description="Bagus! Tidak ada catatan utang piutang aktif di kategori ini."
-            actionLabel="Catat Sekarang"
+            description="Semua catatan utang piutang keluarga tercatat rapi di sini."
+            actionLabel="Tambah Catatan Utang"
             onAction={() => setIsModalOpen(true)}
           />
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredDebts.map((item) => {
-              const isPiutang = item.type === "Piutang";
+              const isUtang = item.type === "Utang";
               const isLunas = item.status === "Lunas";
+              const sisa = item.amount - item.installment_paid;
 
               return (
                 <div
                   key={item.id}
-                  className="bg-surface-card border border-hairline rounded-[20px] p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 group min-w-0 max-w-full overflow-hidden"
+                  className="bg-surface-card border border-hairline rounded-2xl p-5 flex flex-col justify-between hover:border-ink/20 transition-all relative overflow-hidden group min-w-0"
                 >
-                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                    <div
-                      className={`w-11 h-11 rounded-full ${
-                        isPiutang ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
-                      } flex items-center justify-center shrink-0 border border-hairline`}
-                    >
-                      <Handshake className="w-5 h-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <h4 className="font-bold text-ink text-base truncate">
-                          {item.person}
-                        </h4>
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-2 min-w-0">
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            isPiutang
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-rose-100 text-rose-700"
+                          className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shrink-0 ${
+                            isUtang
+                              ? "bg-rose-50 text-rose-700 border border-rose-200"
+                              : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                           }`}
                         >
                           {item.type}
                         </span>
-                        {isLunas ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" /> Lunas
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" /> Belum Lunas
-                          </span>
-                        )}
+                        <h4 className="font-bold text-ink text-sm sm:text-base truncate">
+                          {item.person}
+                        </h4>
                       </div>
-                      <p className="text-xs text-mute mt-1 truncate">
-                        {item.debt_date} • {item.notes || "Tanpa catatan"}
-                      </p>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span
+                          className={`text-xs font-semibold flex items-center gap-1 px-2.5 py-0.5 rounded-full ${
+                            isLunas
+                              ? "bg-emerald-500/10 text-emerald-600"
+                              : "bg-amber-500/10 text-amber-600"
+                          }`}
+                        >
+                          {isLunas ? (
+                            <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+                          ) : (
+                            <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                          )}
+                          {item.status}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item.id, item.person)}
+                          aria-label={`Hapus catatan utang dengan ${item.person}`}
+                          className="opacity-70 sm:opacity-0 group-hover:opacity-100 p-2 min-w-[36px] min-h-[36px] flex items-center justify-center text-mute hover:text-rose-600 hover:bg-rose-50 rounded-full active:scale-90 transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
+                        </button>
+                      </div>
                     </div>
+
+                    <p className="text-xs text-mute line-clamp-2 mb-3">
+                      {item.notes || "Tidak ada catatan keterangan"}
+                    </p>
                   </div>
 
-                  <div className="flex items-center justify-between md:justify-end gap-4 shrink-0">
-                    <div className="text-right">
-                      <p className={`font-extrabold text-base md:text-lg ${isPiutang ? "text-emerald-600" : "text-rose-600"}`}>
-                        {formatRupiah(item.amount)}
+                  <div className="pt-3 border-t border-hairline flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] text-mute block leading-none mb-1">
+                        Sisa Nominal
+                      </span>
+                      <p className="text-base sm:text-lg font-bold text-ink tabular-nums tracking-tight">
+                        {formatRupiah(sisa)}
                       </p>
-                      {item.installment_paid > 0 && (
-                        <p className="text-[11px] text-mute">
-                          Terbayar: {formatRupiah(item.installment_paid)}
-                        </p>
-                      )}
                     </div>
 
-                    <button
-                      onClick={() => handleDelete(item.id, item.person)}
-                      title="Hapus Catatan"
-                      className="opacity-0 group-hover:opacity-100 p-2 text-mute hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="text-right">
+                      <span className="text-[11px] text-mute block leading-none mb-1">
+                        Total Pokok
+                      </span>
+                      <p className="text-xs font-semibold text-mute tabular-nums">
+                        {formatRupiah(item.amount)}
+                      </p>
+                    </div>
                   </div>
                 </div>
               );

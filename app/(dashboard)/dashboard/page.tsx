@@ -16,6 +16,7 @@ import {
   ArrowRight,
   LayoutDashboard,
   CreditCard,
+  Plus,
 } from "lucide-react";
 
 type ViewState = "ready" | "loading" | "empty" | "error";
@@ -54,7 +55,11 @@ export default function DashboardPage() {
   return (
     <PageShell
       title="Beranda"
-      subtitle={data?.month_label ? `Ringkasan kondisi keuangan keluarga ${data.month_label}` : "Ringkasan kondisi keuangan keluarga"}
+      subtitle={
+        data?.month_label
+          ? `Ringkasan kondisi keuangan keluarga ${data.month_label}`
+          : "Ringkasan kondisi keuangan keluarga"
+      }
     >
       {viewState === "loading" && <DashboardSkeleton />}
 
@@ -73,56 +78,64 @@ export default function DashboardPage() {
       {viewState === "error" && (
         <ErrorState
           title="Gagal Memuat Dashboard"
-          message={errorMessage || "Koneksi ke backend Golang terputus. Pastikan server backend sedang berjalan."}
+          message={
+            errorMessage ||
+            "Koneksi ke backend Golang terputus. Pastikan server backend sedang berjalan."
+          }
           onRetry={loadDashboard}
         />
       )}
 
       {viewState === "ready" && data && (
-        <div className="space-y-6">
-          {/* 4 KPI Summary Cards sesuai UI Klasik GC Finance */}
+        <div className="space-y-6 w-full max-w-full">
+          {/* 4 KPI Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-full">
             {/* Total Kekayaan */}
-            <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-sm">
-              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
+            <div className="bg-surface-card p-4 rounded-2xl border border-hairline min-w-0 overflow-hidden transition-all hover:border-ink/20 hover:shadow-xs">
+              <p className="text-[11px] text-mute font-bold tracking-wider uppercase mb-1.5 truncate">
                 TOTAL KEKAYAAN
               </p>
-              <h3 className="text-base sm:text-xl md:text-2xl font-bold text-ink truncate">
+              <h3 className="text-base sm:text-xl md:text-2xl font-bold text-ink tabular-nums truncate tracking-tight">
                 {formatRupiah(data.net_worth)}
               </h3>
             </div>
 
             {/* Pemasukan Bulan Ini */}
-            <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-emerald-500/60 min-w-0 overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-sm">
-              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
+            <div className="bg-surface-card p-4 rounded-2xl border border-emerald-500/40 min-w-0 overflow-hidden transition-all hover:border-emerald-500/70 hover:shadow-xs">
+              <p className="text-[11px] text-emerald-700 font-bold tracking-wider uppercase mb-1.5 truncate">
                 UANG MASUK BULAN INI
               </p>
-              <h3 className="text-base sm:text-xl md:text-2xl font-bold text-emerald-600 truncate">
+              <h3 className="text-base sm:text-xl md:text-2xl font-bold text-emerald-600 tabular-nums truncate tracking-tight">
                 {formatRupiah(data.total_income)}
               </h3>
             </div>
 
             {/* Pengeluaran Bulan Ini */}
-            <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-rose-500/60 min-w-0 overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-sm">
-              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
+            <div className="bg-surface-card p-4 rounded-2xl border border-rose-500/40 min-w-0 overflow-hidden transition-all hover:border-rose-500/70 hover:shadow-xs">
+              <p className="text-[11px] text-rose-700 font-bold tracking-wider uppercase mb-1.5 truncate">
                 UANG KELUAR BULAN INI
               </p>
-              <h3 className="text-base sm:text-xl md:text-2xl font-bold text-rose-600 truncate">
+              <h3 className="text-base sm:text-xl md:text-2xl font-bold text-rose-600 tabular-nums truncate tracking-tight">
                 {formatRupiah(data.total_expense)}
               </h3>
             </div>
 
             {/* Rasio Nabung */}
-            <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-sm">
-              <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
-                PORSI NABUNG
-              </p>
-              <h3 className="text-base sm:text-xl md:text-2xl font-bold text-ink mb-1 truncate">
+            <div className="bg-surface-card p-4 rounded-2xl border border-hairline min-w-0 overflow-hidden transition-all hover:border-ink/20 hover:shadow-xs">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[11px] text-mute font-bold tracking-wider uppercase truncate">
+                  PORSI NABUNG
+                </p>
+                <span className={`text-[11px] font-bold tabular-nums ${data.savings_ratio < 0 ? "text-rose-600" : "text-ink"}`}>
+                  {Math.round(data.savings_ratio)}%
+                </span>
+              </div>
+              <h3 className={`text-base sm:text-xl md:text-2xl font-bold tabular-nums truncate tracking-tight mb-2 ${data.savings_ratio < 0 ? "text-rose-600" : "text-ink"}`}>
                 {Math.round(data.savings_ratio)}%
               </h3>
-              <div className="w-full bg-secondary-bg rounded-full h-1.5 mt-2 border border-hairline overflow-hidden">
+              <div className="w-full bg-secondary-bg rounded-full h-1.5 border border-hairline overflow-hidden">
                 <div
-                  className="bg-[#e60023] h-1.5 rounded-full transition-all duration-500"
+                  className="bg-primary h-1.5 rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(Math.max(data.savings_ratio, 0), 100)}%` }}
                 />
               </div>
@@ -130,23 +143,23 @@ export default function DashboardPage() {
           </div>
 
           {/* Trend Chart */}
-          <section className="bg-surface-card rounded-[24px] p-6 border border-hairline">
+          <section className="bg-surface-card rounded-3xl p-5 sm:p-6 border border-hairline min-w-0 overflow-hidden">
             <div className="mb-4">
               <h3 className="text-base font-bold text-ink">Performa Bulanan</h3>
-              <p className="text-xs text-mute">Pemasukan vs Pengeluaran</p>
+              <p className="text-xs text-mute font-medium">Perbandingan arus pemasukan dan pengeluaran</p>
             </div>
             <FinancialTrendChart />
           </section>
 
           {/* Dompet & Rekening */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-ink text-[18px]">
+          <section className="min-w-0">
+            <div className="flex items-center justify-between mb-3.5">
+              <h3 className="font-bold text-ink text-base sm:text-lg">
                 Dompet &amp; Rekening
               </h3>
               <Link
                 href="/wallets"
-                className="h-9 flex items-center justify-center rounded-full bg-secondary-bg px-4 text-xs font-bold text-ink hover:bg-hairline transition-colors gap-1"
+                className="h-9 min-h-[36px] flex items-center justify-center rounded-full bg-secondary-bg px-3.5 text-xs font-bold text-ink hover:bg-hairline active:scale-95 transition-all gap-1.5"
               >
                 Lihat Semua <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -155,9 +168,9 @@ export default function DashboardPage() {
               {data.wallets.map((w) => (
                 <div
                   key={w.id}
-                  className="bg-surface-card border border-hairline rounded-[16px] p-4 flex flex-col justify-between"
+                  className="bg-surface-card border border-hairline rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between hover:border-ink/20 transition-colors min-w-0"
                 >
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-2 min-w-0">
                     <div className="w-7 h-7 rounded-full bg-secondary-bg flex items-center justify-center shrink-0">
                       {w.wallet_name.toLowerCase().includes("cash") ? (
                         <WalletIcon className="w-3.5 h-3.5 text-ink" />
@@ -170,7 +183,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <p
-                    className={`text-[15px] font-bold truncate ${
+                    className={`text-sm sm:text-[15px] font-bold tabular-nums truncate tracking-tight ${
                       w.current_balance < 0 ? "text-rose-600" : "text-ink"
                     }`}
                   >
@@ -182,27 +195,29 @@ export default function DashboardPage() {
           </section>
 
           {/* Grid: Alokasi & Transaksi Terakhir */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
             {/* Alokasi Pengeluaran */}
-            <section className="bg-surface-card border border-hairline rounded-[24px] p-6">
-              <h3 className="font-bold text-ink text-[18px] mb-4">
+            <section className="bg-surface-card border border-hairline rounded-3xl p-5 sm:p-6 min-w-0">
+              <h3 className="font-bold text-ink text-base sm:text-lg mb-4">
                 Alokasi Pengeluaran Bulan Ini
               </h3>
               <div className="space-y-4">
                 {Object.entries(data.category_spend).length === 0 ? (
-                  <p className="text-mute text-xs">Belum ada pengeluaran di bulan ini.</p>
+                  <p className="text-mute text-xs py-4">Belum ada catatan pengeluaran di bulan ini.</p>
                 ) : (
                   Object.entries(data.category_spend).slice(0, 6).map(([category, amount]) => {
                     const pct = data.total_expense > 0 ? Math.round((amount / data.total_expense) * 100) : 0;
                     return (
-                      <div key={category}>
-                        <div className="flex justify-between text-xs mb-1.5 font-semibold">
-                          <span className="text-ink">{category}</span>
-                          <span className="text-mute">{pct}% ({formatRupiah(amount)})</span>
+                      <div key={category} className="space-y-1.5">
+                        <div className="flex justify-between items-center text-xs font-semibold">
+                          <span className="text-ink truncate pr-2">{category}</span>
+                          <span className="text-mute tabular-nums shrink-0">
+                            {pct}% • {formatRupiah(amount)}
+                          </span>
                         </div>
-                        <div className="w-full bg-secondary-bg rounded-full h-2">
+                        <div className="w-full bg-secondary-bg rounded-full h-2 overflow-hidden">
                           <div
-                            className="bg-[#e60023] h-2 rounded-full transition-all duration-500"
+                            className="bg-primary h-2 rounded-full transition-all duration-500"
                             style={{ width: `${Math.min(pct, 100)}%` }}
                           />
                         </div>
@@ -214,29 +229,29 @@ export default function DashboardPage() {
             </section>
 
             {/* Catatan Terakhir */}
-            <section className="bg-surface-card border border-hairline rounded-[24px] p-6 flex flex-col justify-between">
+            <section className="bg-surface-card border border-hairline rounded-3xl p-5 sm:p-6 flex flex-col justify-between min-w-0">
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-ink text-[18px]">
+                  <h3 className="font-bold text-ink text-base sm:text-lg">
                     Catatan Terakhir
                   </h3>
                   <Link
                     href="/transactions"
-                    className="text-xs font-bold text-ink hover:text-[#e60023] transition-colors"
+                    className="text-xs font-bold text-primary hover:underline transition-colors"
                   >
                     Lihat Semua
                   </Link>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {data.recent_transactions.length === 0 ? (
-                    <p className="text-mute text-xs">Belum ada transaksi.</p>
+                    <p className="text-mute text-xs py-4">Belum ada riwayat transaksi.</p>
                   ) : (
                     data.recent_transactions.slice(0, 6).map((tx) => {
                       const isIncome = tx.type === "Pemasukan";
                       return (
                         <div
                           key={tx.id}
-                          className="flex items-center justify-between p-3 bg-canvas rounded-[14px] border border-hairline/60 min-w-0 max-w-full overflow-hidden"
+                          className="flex items-center justify-between p-3 bg-canvas rounded-2xl border border-hairline/80 min-w-0 max-w-full overflow-hidden hover:border-hairline transition-colors"
                         >
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div
@@ -257,7 +272,7 @@ export default function DashboardPage() {
                             </div>
                           </div>
                           <p
-                            className={`font-bold text-xs ${
+                            className={`font-bold text-xs sm:text-sm tabular-nums ${
                               isIncome ? "text-emerald-600" : "text-ink"
                             } text-right shrink-0 ml-3`}
                           >

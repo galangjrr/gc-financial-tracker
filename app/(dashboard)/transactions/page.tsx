@@ -18,6 +18,7 @@ import {
   Receipt,
   CreditCard,
   Loader2,
+  X,
 } from "lucide-react";
 
 const FILTER_TYPES = [
@@ -93,19 +94,19 @@ export default function TransactionsPage() {
   const getTxIcon = (type: string) => {
     switch (type) {
       case "Pemasukan":
-        return <TrendingUp className="w-4 h-4 text-emerald-600" />;
+        return <TrendingUp className="w-4 h-4 text-emerald-600" aria-hidden="true" />;
       case "Pengeluaran":
-        return <TrendingDown className="w-4 h-4 text-rose-600" />;
+        return <TrendingDown className="w-4 h-4 text-rose-600" aria-hidden="true" />;
       case "Tabungan":
-        return <PiggyBank className="w-4 h-4 text-blue-600" />;
+        return <PiggyBank className="w-4 h-4 text-blue-600" aria-hidden="true" />;
       case "Tagihan":
-        return <Receipt className="w-4 h-4 text-amber-600" />;
+        return <Receipt className="w-4 h-4 text-amber-600" aria-hidden="true" />;
       case "Liabilitas":
-        return <CreditCard className="w-4 h-4 text-purple-600" />;
+        return <CreditCard className="w-4 h-4 text-purple-600" aria-hidden="true" />;
       case "Transfer":
-        return <ArrowRightLeft className="w-4 h-4 text-teal-600" />;
+        return <ArrowRightLeft className="w-4 h-4 text-teal-600" aria-hidden="true" />;
       default:
-        return <ReceiptText className="w-4 h-4 text-mute" />;
+        return <ReceiptText className="w-4 h-4 text-mute" aria-hidden="true" />;
     }
   };
 
@@ -133,25 +134,41 @@ export default function TransactionsPage() {
       title="Riwayat"
       subtitle="Semua catatan transaksi keuangan keluarga"
     >
-      <div className="space-y-6">
+      <div className="space-y-6 w-full max-w-full min-w-0">
         {/* Top Controls: Search Bar & Tambah Button */}
-        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ash" />
+            <label htmlFor="search-tx-input" className="sr-only">
+              Cari transaksi atau catatan
+            </label>
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ash pointer-events-none" aria-hidden="true" />
             <input
-              type="text"
+              id="search-tx-input"
+              type="search"
               placeholder="Cari transaksi atau catatan..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-11 bg-canvas border border-hairline rounded-full pl-11 pr-4 text-sm font-medium text-ink focus:outline-none focus:border-ink transition-colors placeholder:text-ash"
+              className="w-full h-11 bg-canvas border border-hairline rounded-full pl-11 pr-10 text-sm font-medium text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-ink transition-all placeholder:text-ash"
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-mute hover:text-ink rounded-full"
+                aria-label="Hapus kata kunci pencarian"
+              >
+                <X className="w-4 h-4" aria-hidden="true" />
+              </button>
+            )}
           </div>
 
           <button
+            type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("open-tx-modal"))}
-            className="h-11 px-5 rounded-full bg-[#e60023] hover:bg-[#cc001f] text-white font-bold flex items-center justify-center gap-2 text-sm shadow-[0_4px_14px_rgba(230,0,35,0.25)] transition-all"
+            className="h-11 px-5 rounded-full bg-primary hover:bg-primary-pressed active:scale-95 text-primary-foreground font-bold flex items-center justify-center gap-2 text-sm shadow-[0_4px_14px_rgba(230,0,35,0.22)] transition-all focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
-            <Plus className="w-4 h-4" /> Transaksi Baru
+            <Plus className="w-4 h-4" aria-hidden="true" />
+            <span>Transaksi Baru</span>
           </button>
         </div>
 
@@ -162,10 +179,12 @@ export default function TransactionsPage() {
             return (
               <button
                 key={type}
+                type="button"
                 onClick={() => setSelectedType(type)}
-                className={`px-4 py-2 rounded-full text-xs font-bold shrink-0 transition-colors ${
+                aria-pressed={active}
+                className={`px-4 py-2 rounded-full text-xs font-bold shrink-0 transition-all active:scale-95 ${
                   active
-                    ? "bg-ink text-canvas shadow-sm"
+                    ? "bg-ink text-canvas shadow-xs"
                     : "bg-surface-card text-mute hover:text-ink hover:bg-secondary-bg border border-hairline"
                 }`}
               >
@@ -185,15 +204,20 @@ export default function TransactionsPage() {
             description={
               searchTerm
                 ? `Tidak ditemukan transaksi dengan kata kunci "${searchTerm}"`
-                : "Belum ada transaksi di kategori ini."
+                : "Belum ada catatan transaksi di kategori ini."
             }
             actionLabel="Catat Transaksi Sekarang"
             onAction={() => window.dispatchEvent(new CustomEvent("open-tx-modal"))}
           />
         ) : (
-          <div className="bg-surface-card border border-hairline rounded-[24px] p-4 md:p-6 space-y-3">
+          <div className="bg-surface-card border border-hairline rounded-3xl p-4 md:p-6 space-y-3 min-w-0">
             <div className="flex justify-between items-center px-2 pb-2 border-b border-hairline text-xs font-bold text-mute">
-              <span>DAFTAR TRANSAKSI ({filteredTransactions.length})</span>
+              <div className="flex items-center gap-2">
+                <span>DAFTAR TRANSAKSI</span>
+                <span className="px-2 py-0.5 rounded-full bg-secondary-bg text-ink tabular-nums text-[11px] font-bold">
+                  {filteredTransactions.length}
+                </span>
+              </div>
               <span>NOMINAL</span>
             </div>
 
@@ -205,9 +229,9 @@ export default function TransactionsPage() {
                 return (
                   <div
                     key={tx.id}
-                    className="flex items-center justify-between p-3.5 bg-canvas rounded-[16px] border border-hairline/70 hover:border-hairline transition-all group"
+                    className="flex items-center justify-between p-3.5 bg-canvas rounded-2xl border border-hairline/80 hover:border-hairline transition-all group min-w-0 max-w-full overflow-hidden"
                   >
-                    <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
                       <div
                         className={`w-10 h-10 rounded-full ${getTxBg(
                           tx.type
@@ -215,11 +239,11 @@ export default function TransactionsPage() {
                       >
                         {getTxIcon(tx.type)}
                       </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 min-w-0">
                           <p className="font-bold text-sm text-ink truncate">
                             {isTransfer
-                              ? `Transfer: ${tx.wallet_source_name} → ${tx.wallet_dest_name}`
+                              ? `Transfer: ${tx.wallet_source_name || "Dompet"} ke ${tx.wallet_dest_name || "Dompet"}`
                               : tx.category_name || tx.type}
                           </p>
                           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary-bg text-mute shrink-0">
@@ -233,9 +257,9 @@ export default function TransactionsPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 shrink-0 ml-3">
+                    <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-3">
                       <p
-                        className={`font-bold text-sm md:text-base ${
+                        className={`font-bold text-sm md:text-base tabular-nums ${
                           isIncome
                             ? "text-emerald-600"
                             : isTransfer
@@ -247,15 +271,16 @@ export default function TransactionsPage() {
                       </p>
 
                       <button
+                        type="button"
                         onClick={(e) => handleDelete(tx.id, e)}
                         disabled={deletingId === tx.id}
-                        title="Hapus Transaksi"
-                        className="opacity-0 group-hover:opacity-100 p-2 text-mute hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all"
+                        aria-label={`Hapus catatan transaksi ${tx.category_name || tx.type}`}
+                        className="opacity-70 sm:opacity-0 group-hover:opacity-100 p-2 min-w-[36px] min-h-[36px] flex items-center justify-center text-mute hover:text-rose-600 hover:bg-rose-50 active:scale-90 rounded-full transition-all"
                       >
                         {deletingId === tx.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+                          <Loader2 className="w-4 h-4 animate-spin text-rose-600" aria-hidden="true" />
                         ) : (
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
                         )}
                       </button>
                     </div>

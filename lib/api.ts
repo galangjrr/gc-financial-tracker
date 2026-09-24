@@ -130,6 +130,8 @@ export const api = {
   deleteWallet: (id: string) => request(`/wallets/${id}`, { method: "DELETE" }),
 
   getCategories: () => request<Record<string, Category[]>>("/categories"),
+  createCategory: (data: Partial<Category>) =>
+    request<{ id: string }>("/categories", { method: "POST", body: JSON.stringify(data) }),
 
   getTransactions: (params?: { type?: string; wallet_id?: string; month?: string; search?: string }) => {
     const searchParams = new URLSearchParams();

@@ -26,7 +26,6 @@ import {
   ParkingCircle,
   Loader2,
   ChevronDown,
-  Sparkles,
 } from "lucide-react";
 
 const PRIMARY_TABS = ["Pengeluaran", "Pemasukan", "Transfer"] as const;
@@ -45,9 +44,9 @@ export function TransactionModal({ open, setOpen }: TransactionModalProps) {
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto rounded-[32px] p-6 border border-hairline bg-canvas">
-          <DialogHeader className="flex flex-row items-center justify-between pb-2 border-b border-hairline">
-            <DialogTitle className="font-bold text-[18px] text-ink">
+        <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto rounded-3xl p-6 border border-hairline bg-canvas">
+          <DialogHeader className="flex flex-row items-center justify-between pb-3 border-b border-hairline">
+            <DialogTitle className="font-bold text-lg text-ink">
               Catat Transaksi Cepat
             </DialogTitle>
           </DialogHeader>
@@ -59,14 +58,13 @@ export function TransactionModal({ open, setOpen }: TransactionModalProps) {
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerContent className="bg-canvas border-hairline max-h-[92vh] flex flex-col">
-        <DrawerHeader className="px-6 pt-3 pb-2 text-left border-b border-hairline">
-          <div className="mx-auto w-10 h-1.5 rounded-full bg-hairline mb-2" />
-          <DrawerTitle className="font-bold text-[17px] text-ink">
+      <DrawerContent className="bg-canvas border-hairline max-h-[92dvh] flex flex-col rounded-t-3xl">
+        <DrawerHeader className="px-6 pt-2 pb-2 text-left border-b border-hairline">
+          <DrawerTitle className="font-bold text-base text-ink">
             Catat Transaksi Cepat
           </DrawerTitle>
         </DrawerHeader>
-        <div className="flex-1 overflow-y-auto px-4 pt-2 pb-[max(env(safe-area-inset-bottom,0px),20px)]">
+        <div className="flex-1 overflow-y-auto px-4 pt-3 pb-[max(env(safe-area-inset-bottom,0px),24px)]">
           <FastTransactionForm onSuccess={() => setOpen(false)} />
         </div>
       </DrawerContent>
@@ -86,7 +84,7 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
   const [notes, setNotes] = useState("");
   const [showCustomDate, setShowCustomDate] = useState(false);
   
-  // Biaya parkir opsional
+  // Biaya parkir opsional untuk pengeluaran harian keluarga
   const [hasParking, setHasParking] = useState(false);
   const [parkingAmount, setParkingAmount] = useState(2000);
 
@@ -110,7 +108,6 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
       setWallets(walletList);
       setCategoriesBySegment(catMap);
 
-      // Default wallet: Cash if exists, else first
       const defaultWallet = walletList.find((w) => w.wallet_name.toLowerCase().includes("cash")) || walletList[0];
       if (defaultWallet) {
         setWalletSourceId(defaultWallet.id);
@@ -124,7 +121,6 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
     }
   };
 
-  // Sync category when tab changes
   useEffect(() => {
     if (activeTab === "Transfer") {
       setCategoryId("");
@@ -161,22 +157,22 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
     setSuccessMsg("");
 
     if (rawAmount <= 0) {
-      setErrorMsg("Nominal transaksi harus lebih dari 0");
+      setErrorMsg("Nominal transaksi harus lebih dari 0.");
       return;
     }
 
     if (activeTab === "Transfer") {
       if (!walletSourceId || !walletDestId) {
-        setErrorMsg("Pilih dompet asal dan dompet tujuan");
+        setErrorMsg("Pilih dompet asal dan dompet tujuan.");
         return;
       }
       if (walletSourceId === walletDestId) {
-        setErrorMsg("Dompet asal dan tujuan tidak boleh sama");
+        setErrorMsg("Dompet asal dan tujuan tidak boleh sama.");
         return;
       }
     } else {
       if (!walletSourceId) {
-        setErrorMsg("Pilih dompet sumber");
+        setErrorMsg("Pilih dompet sumber transaksi.");
         return;
       }
     }
@@ -222,9 +218,9 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
 
       setTimeout(() => {
         onSuccess();
-      }, 350);
+      }, 250);
     } catch (err: any) {
-      setErrorMsg(err.message || "Gagal menyimpan transaksi");
+      setErrorMsg(err.message || "Gagal menyimpan transaksi. Coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -234,9 +230,9 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
   const isExtraTabActive = EXTRA_TABS.includes(activeTab as any);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 pt-1">
+    <form onSubmit={handleSubmit} className="space-y-3.5 pt-1" noValidate>
       {/* 1. Tipe Transaksi Ringkas: 3 Tab Utama + Tab Lainnya */}
-      <div className="flex items-center gap-1.5 p-1 bg-surface-card rounded-[18px] border border-hairline">
+      <div className="flex items-center gap-1.5 p-1 bg-surface-card rounded-2xl border border-hairline">
         {PRIMARY_TABS.map((tab) => {
           const isActive = activeTab === tab;
           return (
@@ -247,9 +243,9 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
                 setActiveTab(tab);
                 setShowMoreTabs(false);
               }}
-              className={`flex-1 py-2 rounded-[14px] text-xs font-bold transition-all ${
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
                 isActive
-                  ? "bg-ink text-canvas shadow-sm"
+                  ? "bg-ink text-canvas shadow-xs"
                   : "text-mute hover:text-ink hover:bg-secondary-bg/50"
               }`}
             >
@@ -260,20 +256,22 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
         <button
           type="button"
           onClick={() => setShowMoreTabs(!showMoreTabs)}
-          className={`px-3 py-2 rounded-[14px] text-xs font-bold transition-all flex items-center gap-1 ${
+          className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 active:scale-95 ${
             isExtraTabActive
-              ? "bg-ink text-canvas shadow-sm"
+              ? "bg-ink text-canvas shadow-xs"
               : "text-mute hover:text-ink hover:bg-secondary-bg/50"
           }`}
+          aria-expanded={showMoreTabs}
+          aria-label="Tampilkan jenis transaksi lainnya"
         >
           <span>{isExtraTabActive ? activeTab : "Lainnya"}</span>
-          <ChevronDown className="w-3.5 h-3.5" />
+          <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
       </div>
 
       {/* Sub menu untuk tipe Tabungan, Liabilitas, Tagihan */}
       {showMoreTabs && (
-        <div className="flex gap-1.5 p-1.5 bg-secondary-bg/50 rounded-[14px] border border-hairline animate-in fade-in duration-150">
+        <div className="flex gap-1.5 p-1.5 bg-secondary-bg/50 rounded-xl border border-hairline animate-in fade-in duration-150">
           {EXTRA_TABS.map((tab) => (
             <button
               key={tab}
@@ -282,9 +280,9 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
                 setActiveTab(tab);
                 setShowMoreTabs(false);
               }}
-              className={`flex-1 py-1.5 rounded-[10px] text-xs font-semibold transition-all ${
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === tab
-                  ? "bg-ink text-canvas shadow-sm"
+                  ? "bg-ink text-canvas shadow-xs"
                   : "text-body hover:bg-canvas"
               }`}
             >
@@ -295,20 +293,24 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
       )}
 
       {/* 2. Hero Input Nominal + Chip Nominal Cepat */}
-      <div className="bg-surface-card p-4 rounded-[22px] border border-hairline text-center flex flex-col items-center">
-        <span className="text-[10px] text-mute font-bold uppercase tracking-wider mb-1">
-          Nominal
-        </span>
+      <div className="bg-surface-card p-4 rounded-2xl border border-hairline text-center flex flex-col items-center">
+        <label 
+          htmlFor="tx-amount-input"
+          className="text-[11px] text-mute font-bold uppercase tracking-wider mb-1"
+        >
+          Nominal Uang
+        </label>
         <div className="flex items-center justify-center gap-1.5 w-full">
-          <span className="text-brand-emerald text-xl md:text-2xl font-black">Rp</span>
+          <span className="text-emerald-600 text-xl md:text-2xl font-black">Rp</span>
           <input
+            id="tx-amount-input"
             type="text"
             inputMode="numeric"
             value={displayAmount}
             onChange={(e) => handleAmountChange(e.target.value)}
             placeholder="0"
             autoFocus
-            className="bg-transparent text-ink text-3xl md:text-4xl font-black w-full text-center focus:outline-none placeholder:text-ash border-none p-0"
+            className="bg-transparent text-ink text-3xl md:text-4xl font-black tabular-nums w-full text-center focus:outline-none placeholder:text-ash border-none p-0"
           />
         </div>
 
@@ -319,7 +321,7 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
               key={amt}
               type="button"
               onClick={() => handleQuickAmount(amt)}
-              className="px-2.5 py-1 bg-canvas hover:bg-secondary-bg border border-hairline rounded-full text-[11px] font-bold text-ink transition-transform active:scale-95"
+              className="px-3 py-1.5 bg-canvas hover:bg-secondary-bg border border-hairline rounded-full text-xs font-bold text-ink tabular-nums transition-transform active:scale-95 shadow-xs"
             >
               +{amt >= 1000 ? `${amt / 1000}rb` : amt}
             </button>
@@ -327,7 +329,7 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       </div>
 
-      {/* 3. Kategori Chip 1 Ketukan (Anti Dropdown Wheel) */}
+      {/* 3. Kategori Chip 1 Ketukan */}
       {activeTab !== "Transfer" && currentCategories.length > 0 && (
         <div className="space-y-1.5">
           <div className="flex justify-between items-center px-1">
@@ -335,7 +337,7 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
               Pilih Kategori
             </span>
           </div>
-          <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pb-1 scrollbar-hide">
+          <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pb-1 scrollbar-hide">
             {currentCategories.map((c) => {
               const isSelected = categoryId === c.id;
               return (
@@ -343,10 +345,11 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
                   key={c.id}
                   type="button"
                   onClick={() => setCategoryId(c.id)}
+                  aria-pressed={isSelected}
                   className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
                     isSelected
-                      ? "bg-ink text-canvas border-ink shadow-sm scale-[1.02]"
-                      : "bg-surface-card text-body hover:bg-secondary-bg border-hairline"
+                      ? "bg-ink text-canvas border-ink shadow-xs scale-[1.02]"
+                      : "bg-surface-card text-body hover:bg-secondary-bg border-hairline active:scale-95"
                   }`}
                 >
                   {c.category_name}
@@ -357,19 +360,23 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       )}
 
-      {/* 4. Pilihan Dompet (Otomatis Real-time Tanpa Ribet Input Tanggal) */}
+      {/* 4. Pilihan Dompet */}
       {activeTab === "Transfer" ? (
         <div className="grid grid-cols-2 gap-2">
           {/* Dari Dompet */}
-          <div className="bg-surface-card p-2.5 rounded-[16px] border border-hairline flex items-center gap-2">
-            <div className="w-7 h-7 rounded-[10px] bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
-              <WalletIcon className="w-3.5 h-3.5 text-ink" />
+          <div className="bg-surface-card p-3 rounded-2xl border border-hairline flex items-center gap-2">
+            <div className="w-7 h-7 rounded-xl bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
+              <WalletIcon className="w-3.5 h-3.5 text-ink" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="block text-[10px] text-mute font-bold leading-none mb-1">
+              <label 
+                htmlFor="select-wallet-source"
+                className="block text-[10px] text-mute font-bold leading-none mb-1"
+              >
                 Dari Dompet
-              </span>
+              </label>
               <select
+                id="select-wallet-source"
                 value={walletSourceId}
                 onChange={(e) => setWalletSourceId(e.target.value)}
                 className="w-full bg-transparent text-ink text-xs font-bold focus:outline-none appearance-none cursor-pointer border-none p-0 truncate"
@@ -384,15 +391,19 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
           </div>
 
           {/* Ke Dompet */}
-          <div className="bg-surface-card p-2.5 rounded-[16px] border border-hairline flex items-center gap-2">
-            <div className="w-7 h-7 rounded-[10px] bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
-              <ArrowRightLeft className="w-3.5 h-3.5 text-ink" />
+          <div className="bg-surface-card p-3 rounded-2xl border border-hairline flex items-center gap-2">
+            <div className="w-7 h-7 rounded-xl bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
+              <ArrowRightLeft className="w-3.5 h-3.5 text-ink" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="block text-[10px] text-mute font-bold leading-none mb-1">
+              <label 
+                htmlFor="select-wallet-dest"
+                className="block text-[10px] text-mute font-bold leading-none mb-1"
+              >
                 Ke Dompet
-              </span>
+              </label>
               <select
+                id="select-wallet-dest"
                 value={walletDestId}
                 onChange={(e) => setWalletDestId(e.target.value)}
                 className="w-full bg-transparent text-ink text-xs font-bold focus:outline-none appearance-none cursor-pointer border-none p-0 truncate"
@@ -408,16 +419,20 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       ) : (
         <div className="space-y-1.5">
-          <div className="bg-surface-card p-2.5 rounded-[16px] border border-hairline flex items-center justify-between gap-3">
+          <div className="bg-surface-card p-3 rounded-2xl border border-hairline flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 flex-1 min-w-0">
-              <div className="w-7 h-7 rounded-[10px] bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
-                <WalletIcon className="w-3.5 h-3.5 text-ink" />
+              <div className="w-7 h-7 rounded-xl bg-canvas flex items-center justify-center text-body border border-hairline shrink-0">
+                <WalletIcon className="w-3.5 h-3.5 text-ink" aria-hidden="true" />
               </div>
               <div className="flex-1 min-w-0">
-                <span className="block text-[10px] text-mute font-bold leading-none mb-1">
+                <label 
+                  htmlFor="select-wallet-main"
+                  className="block text-[10px] text-mute font-bold leading-none mb-1"
+                >
                   Pakai Dompet
-                </span>
+                </label>
                 <select
+                  id="select-wallet-main"
                   value={walletSourceId}
                   onChange={(e) => setWalletSourceId(e.target.value)}
                   className="w-full bg-transparent text-ink text-xs font-bold focus:outline-none appearance-none cursor-pointer border-none p-0 truncate"
@@ -434,22 +449,28 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
             <button
               type="button"
               onClick={() => setShowCustomDate(!showCustomDate)}
-              className="px-2.5 py-1.5 bg-canvas hover:bg-secondary-bg border border-hairline rounded-full text-[11px] font-semibold text-mute hover:text-ink shrink-0 transition-colors flex items-center gap-1"
+              className="px-3 py-1.5 bg-canvas hover:bg-secondary-bg border border-hairline rounded-full text-xs font-semibold text-mute hover:text-ink shrink-0 transition-colors flex items-center gap-1 active:scale-95"
             >
-              <Calendar className="w-3 h-3" />
+              <Calendar className="w-3 h-3" aria-hidden="true" />
               <span>{showCustomDate ? "Batal" : "Ganti Tanggal"}</span>
             </button>
           </div>
 
-          {/* Opsi Ubah Tanggal Lampau (Hanya jika dibutuhkan) */}
+          {/* Opsi Ubah Tanggal Lampau */}
           {showCustomDate && (
-            <div className="p-2 bg-secondary-bg/40 rounded-[12px] border border-hairline flex items-center gap-2 animate-in fade-in duration-150">
-              <span className="text-[11px] font-semibold text-mute shrink-0">Tanggal Lampau:</span>
+            <div className="p-2.5 bg-secondary-bg/50 rounded-xl border border-hairline flex items-center gap-2 animate-in fade-in duration-150">
+              <label 
+                htmlFor="tx-custom-date"
+                className="text-xs font-semibold text-mute shrink-0"
+              >
+                Tanggal Lampau:
+              </label>
               <input
+                id="tx-custom-date"
                 type="date"
                 value={txDate}
                 onChange={(e) => setTxDate(e.target.value)}
-                className="w-full bg-canvas text-ink text-xs font-bold p-1 rounded-[8px] border border-hairline focus:outline-none"
+                className="w-full bg-canvas text-ink text-xs font-bold p-1.5 rounded-lg border border-hairline focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
               />
             </div>
           )}
@@ -458,9 +479,13 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
 
       {/* 5. Catatan Kecil + Opsi Cepat Parkir Sejajar */}
       <div className="flex items-center gap-2">
-        <div className="flex-1 bg-surface-card px-3 py-2 rounded-[14px] border border-hairline flex items-center gap-2">
-          <FileText className="w-3.5 h-3.5 text-mute shrink-0" />
+        <div className="flex-1 bg-surface-card px-3 py-2 rounded-2xl border border-hairline flex items-center gap-2 focus-within:border-ink transition-colors">
+          <FileText className="w-3.5 h-3.5 text-mute shrink-0" aria-hidden="true" />
+          <label htmlFor="tx-notes-input" className="sr-only">
+            Catatan transaksi
+          </label>
           <input
+            id="tx-notes-input"
             type="text"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -474,13 +499,14 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
           <button
             type="button"
             onClick={() => setHasParking(!hasParking)}
-            className={`px-3 py-2 rounded-[14px] text-xs font-bold transition-all border flex items-center gap-1.5 shrink-0 ${
+            aria-pressed={hasParking}
+            className={`px-3 py-2 rounded-2xl text-xs font-bold transition-all border flex items-center gap-1.5 shrink-0 active:scale-95 ${
               hasParking
-                ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
                 : "bg-surface-card text-mute hover:text-ink border-hairline"
             }`}
           >
-            <ParkingCircle className="w-3.5 h-3.5" />
+            <ParkingCircle className="w-3.5 h-3.5" aria-hidden="true" />
             <span>+2rb</span>
           </button>
         )}
@@ -488,27 +514,39 @@ function FastTransactionForm({ onSuccess }: { onSuccess: () => void }) {
 
       {/* Pesan Status */}
       {errorMsg && (
-        <p className="text-xs text-error font-semibold text-center">{errorMsg}</p>
+        <div 
+          role="alert" 
+          aria-live="polite"
+          className="text-xs text-rose-600 bg-rose-50 border border-rose-200 p-2 rounded-xl font-medium text-center animate-in fade-in duration-150"
+        >
+          {errorMsg}
+        </div>
       )}
       {successMsg && (
-        <p className="text-xs text-emerald-600 font-semibold text-center flex items-center justify-center gap-1">
-          <Check className="w-4 h-4" /> {successMsg}
-        </p>
+        <div 
+          role="status"
+          aria-live="polite"
+          className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 p-2 rounded-xl font-medium text-center flex items-center justify-center gap-1 animate-in fade-in duration-150"
+        >
+          <Check className="w-4 h-4 text-emerald-600" aria-hidden="true" /> {successMsg}
+        </div>
       )}
 
       {/* 6. Tombol Eksekusi Merah Selalu Kelihatan Tanpa Scroll */}
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-[#e60023] hover:bg-[#cc001f] active:scale-[0.98] text-white font-bold h-11 rounded-[16px] transition-all flex items-center justify-center gap-2 text-sm shadow-[0_4px_16px_rgba(230,0,35,0.25)]"
+        className="w-full bg-primary hover:bg-primary-pressed active:scale-[0.98] text-primary-foreground font-bold h-12 rounded-2xl transition-all flex items-center justify-center gap-2 text-sm shadow-[0_4px_16px_rgba(230,0,35,0.22)] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60"
       >
         {loading ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" /> Menyimpan...
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+            <span>Menyimpan...</span>
           </>
         ) : (
           <>
-            Sip, Catat Sekarang <Send className="w-3.5 h-3.5" />
+            <span>Sip, Catat Sekarang</span>
+            <Send className="w-3.5 h-3.5" aria-hidden="true" />
           </>
         )}
       </button>

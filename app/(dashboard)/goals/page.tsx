@@ -50,28 +50,28 @@ export default function GoalsPage() {
     >
       <GoalModal open={isModalOpen} setOpen={setIsModalOpen} />
 
-      <div className="space-y-6">
+      <div className="space-y-6 w-full max-w-full min-w-0">
         {/* KPI Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-full">
-          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline min-w-0 overflow-hidden">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
-              TOTAL GOALS
+          <div className="bg-surface-card p-4 rounded-2xl border border-hairline min-w-0 overflow-hidden">
+            <p className="text-[11px] text-mute font-bold tracking-wider uppercase mb-1.5 truncate">
+              TOTAL IMPIAN
             </p>
-            <p className="text-xl sm:text-2xl font-bold text-ink truncate">{goals.length}</p>
+            <p className="text-xl sm:text-2xl font-bold text-ink tabular-nums truncate tracking-tight">{goals.length}</p>
           </div>
-          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-emerald-500/60 min-w-0 overflow-hidden">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
+          <div className="bg-surface-card p-4 rounded-2xl border border-emerald-500/40 min-w-0 overflow-hidden">
+            <p className="text-[11px] text-emerald-700 font-bold tracking-wider uppercase mb-1.5 truncate">
               TOTAL TARGET
             </p>
-            <p className="text-base sm:text-xl md:text-2xl font-bold text-emerald-600 truncate">
+            <p className="text-base sm:text-xl md:text-2xl font-bold text-emerald-600 tabular-nums truncate tracking-tight">
               {formatRupiah(totalTarget)}
             </p>
           </div>
-          <div className="bg-surface-card p-3.5 sm:p-4 rounded-[16px] border border-hairline col-span-2 md:col-span-1 min-w-0 overflow-hidden">
-            <p className="text-[10px] text-mute font-bold tracking-wider uppercase mb-1 truncate">
+          <div className="bg-surface-card p-4 rounded-2xl border border-hairline col-span-2 md:col-span-1 min-w-0 overflow-hidden">
+            <p className="text-[11px] text-mute font-bold tracking-wider uppercase mb-1.5 truncate">
               TOTAL TERKUMPUL
             </p>
-            <p className="text-base sm:text-xl md:text-2xl font-bold text-ink truncate">
+            <p className="text-base sm:text-xl md:text-2xl font-bold text-ink tabular-nums truncate tracking-tight">
               {formatRupiah(totalSaved)}
             </p>
           </div>
@@ -79,12 +79,14 @@ export default function GoalsPage() {
 
         {/* Action Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full max-w-full">
-          <h3 className="font-bold text-ink text-base">Daftar Impian</h3>
+          <h3 className="font-bold text-ink text-base sm:text-lg">Daftar Impian</h3>
           <button
+            type="button"
             onClick={() => setIsModalOpen(true)}
-            className="h-10 px-4 rounded-full bg-[#e60023] hover:bg-[#cc001f] text-white font-bold flex items-center justify-center gap-1.5 text-xs shadow-[0_4px_12px_rgba(230,0,35,0.2)] transition-all shrink-0 self-start sm:self-auto"
+            className="h-10 px-4 rounded-full bg-primary hover:bg-primary-pressed text-primary-foreground font-bold flex items-center justify-center gap-1.5 text-xs shadow-[0_4px_12px_rgba(230,0,35,0.22)] transition-all shrink-0 self-start sm:self-auto active:scale-95"
           >
-            <Plus className="w-4 h-4" /> Tambah Goal Baru
+            <Plus className="w-4 h-4" aria-hidden="true" />
+            <span>Tambah Impian Baru</span>
           </button>
         </div>
 
@@ -96,62 +98,72 @@ export default function GoalsPage() {
             icon={Target}
             title="Belum Ada Impian"
             description="Mulai rencanakan target tabungan impian keluargamu sekarang."
-            actionLabel="Tambah Goal Baru"
+            actionLabel="Tambah Impian Baru"
             onAction={() => setIsModalOpen(true)}
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {goals.map((goal) => {
               const pct = goal.target_amount > 0 ? Math.round((goal.saved_amount / goal.target_amount) * 100) : 0;
+
               return (
                 <div
                   key={goal.id}
-                  className="bg-surface-card border border-hairline rounded-[24px] p-6 space-y-4 group hover:border-hairline/90 transition-all"
+                  className="bg-surface-card border border-hairline rounded-2xl p-5 flex flex-col justify-between hover:border-ink/20 transition-all group min-w-0"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-canvas border border-hairline flex items-center justify-center text-xl shrink-0">
-                        {goal.icon || "🎯"}
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-ink text-base">
-                          {goal.name}
-                        </h4>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary-bg text-mute">
-                          Prioritas: {goal.priority}
-                        </span>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => handleDelete(goal.id, goal.name)}
-                      title="Hapus Target"
-                      className="opacity-0 group-hover:opacity-100 p-2 text-mute hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
                   <div>
-                    <div className="flex justify-between items-baseline mb-2">
-                      <span className="text-xs font-semibold text-mute">Progres</span>
-                      <span className="text-xs font-bold text-ink">{pct}%</span>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-2xl shrink-0" role="img" aria-label="Ikon impian">
+                          {goal.icon || "🎯"}
+                        </span>
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-ink text-sm sm:text-base truncate">
+                            {goal.name}
+                          </h4>
+                          <span className="text-[10px] font-semibold text-mute uppercase tracking-wider">
+                            Prioritas: {goal.priority}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(goal.id, goal.name)}
+                        aria-label={`Hapus target ${goal.name}`}
+                        className="opacity-70 sm:opacity-0 group-hover:opacity-100 p-2 min-w-[36px] min-h-[36px] flex items-center justify-center text-mute hover:text-rose-600 hover:bg-rose-50 rounded-full active:scale-90 transition-all shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" aria-hidden="true" />
+                      </button>
                     </div>
-                    <div className="w-full bg-secondary-bg rounded-full h-2.5 overflow-hidden">
-                      <div
-                        className="bg-[#e60023] h-2.5 rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(pct, 100)}%` }}
-                      />
+
+                    <div className="space-y-1.5 my-3">
+                      <div className="flex justify-between items-center text-xs font-semibold">
+                        <span className="text-mute font-medium">Progres Nabung</span>
+                        <span className="text-ink font-bold tabular-nums">{pct}%</span>
+                      </div>
+                      <div className="w-full bg-secondary-bg rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-primary h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(pct, 100)}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center pt-2 border-t border-hairline text-xs font-semibold">
-                    <span className="text-mute">
-                      Terkumpul: <strong className="text-ink">{formatRupiah(goal.saved_amount)}</strong>
-                    </span>
-                    <span className="text-mute">
-                      Target: <strong className="text-ink">{formatRupiah(goal.target_amount)}</strong>
-                    </span>
+                  <div className="pt-3 border-t border-hairline flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-mute block text-[11px] mb-0.5 font-medium">Terkumpul</span>
+                      <p className="font-bold text-ink tabular-nums text-sm">
+                        {formatRupiah(goal.saved_amount)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-mute block text-[11px] mb-0.5 font-medium">Target Total</span>
+                      <p className="font-semibold text-mute tabular-nums">
+                        {formatRupiah(goal.target_amount)}
+                      </p>
+                    </div>
                   </div>
                 </div>
               );
